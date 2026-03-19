@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - FinUp</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <nav class="navbar">
+            <div class="navbar-content">
+                <h2>💰 FinUp Dashboard</h2>
+                <div class="navbar-actions">
+                    <span class="user-greeting">Welcome, <%= client.firstName %></span>
+                    <% if (!client.zohoAccessToken) { %>
+                        <a href="/auth/zoho" class="nav-link connect-zoho">🔗 Connect Zoho Analytics</a>
+                    <% } else { %>
+                        <span class="zoho-connected">✅ Zoho Connected</span>
+                    <% } %>
+                    <a href="/profile" class="nav-link">👤 Profile</a>
+                    <a href="/logout" class="logout-btn">🚪 Logout</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="dashboard-container" id="dashboard-content">
+                <!-- Loading State -->
+                <div class="loading-state" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading your financial data...</p>
+                </div>
+
+                <!-- Dashboard Content (populated by JavaScript) -->
+                <div class="dashboard-content" id="dashboard-main" style="display: none;">
+                <!-- Account Summary Cards -->
+                <div class="cards-grid">
+                    <div class="card account-card">
+                        <div class="card-header">
+                            <h3>Account Balance</h3>
+                            <span class="card-icon">💳</span>
+                        </div>
+                        <div class="card-amount">
+                            $<%= (Math.random() * 50000 + 5000).toFixed(2) %>
+                        </div>
+                        <p class="card-label">Total Available</p>
+                    </div>
+
+                    <div class="card income-card">
+                        <div class="card-header">
+                            <h3>Monthly Income</h3>
+                            <span class="card-icon">📈</span>
+                        </div>
+                        <div class="card-amount">
+                            $<%= (Math.random() * 8000 + 3000).toFixed(2) %>
+                        </div>
+                        <p class="card-label">This Month</p>
+                    </div>
+
+                    <div class="card expense-card">
+                        <div class="card-header">
+                            <h3>Monthly Expenses</h3>
+                            <span class="card-icon">📉</span>
+                        </div>
+                        <div class="card-amount">
+                            $<%= (Math.random() * 3000 + 500).toFixed(2) %>
+                        </div>
+                        <p class="card-label">This Month</p>
+                    </div>
+
+                    <div class="card savings-card">
+                        <div class="card-header">
+                            <h3>Savings Goal</h3>
+                            <span class="card-icon">🎯</span>
+                        </div>
+                        <div class="card-amount">
+                            <%= Math.floor(Math.random() * 40 + 60) %>%
+                        </div>
+                        <p class="card-label">Progress</p>
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div class="analytics-section">
+                    <h2>📊 Financial Overview</h2>
+
+                    <div class="analytics-grid">
+                        <!-- Spending by Category -->
+                        <div class="analytics-card">
+                            <h3>Spending by Category</h3>
+                            <div class="category-list">
+                                <div class="category-item">
+                                    <span class="category-label">🍔 Food & Dining</span>
+                                    <div class="category-bar">
+                                        <div class="category-progress" style="width: 35%"></div>
+                                    </div>
+                                    <span class="category-value">$850</span>
+                                </div>
+                                <div class="category-item">
+                                    <span class="category-label">🚗 Transportation</span>
+                                    <div class="category-bar">
+                                        <div class="category-progress" style="width: 25%"></div>
+                                    </div>
+                                    <span class="category-value">$600</span>
+                                </div>
+                                <div class="category-item">
+                                    <span class="category-label">🏠 Housing</span>
+                                    <div class="category-bar">
+                                        <div class="category-progress" style="width: 40%"></div>
+                                    </div>
+                                    <span class="category-value">$1,200</span>
+                                </div>
+                                <div class="category-item">
+                                    <span class="category-label">🎮 Entertainment</span>
+                                    <div class="category-bar">
+                                        <div class="category-progress" style="width: 15%"></div>
+                                    </div>
+                                    <span class="category-value">$350</span>
+                                </div>
+                                <div class="category-item">
+                                    <span class="category-label">📚 Utilities</span>
+                                    <div class="category-bar">
+                                        <div class="category-progress" style="width: 20%"></div>
+                                    </div>
+                                    <span class="category-value">$450</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Transactions -->
+                        <div class="analytics-card">
+                            <h3>Recent Transactions</h3>
+                            <div class="transactions-list">
+                                <div class="transaction">
+                                    <div class="transaction-info">
+                                        <span class="transaction-name">🛒 Amazon Purchase</span>
+                                        <span class="transaction-date">Today</span>
+                                    </div>
+                                    <span class="transaction-amount minus">-$125.99</span>
+                                </div>
+                                <div class="transaction">
+                                    <div class="transaction-info">
+                                        <span class="transaction-name">💼 Salary Deposit</span>
+                                        <span class="transaction-date">2 days ago</span>
+                                    </div>
+                                    <span class="transaction-amount plus">+$4,500.00</span>
+                                </div>
+                                <div class="transaction">
+                                    <div class="transaction-info">
+                                        <span class="transaction-name">☕ Coffee Shop</span>
+                                        <span class="transaction-date">3 days ago</span>
+                                    </div>
+                                    <span class="transaction-amount minus">-$5.50</span>
+                                </div>
+                                <div class="transaction">
+                                    <div class="transaction-info">
+                                        <span class="transaction-name">🎬 Netflix</span>
+                                        <span class="transaction-date">5 days ago</span>
+                                    </div>
+                                    <span class="transaction-amount minus">-$15.99</span>
+                                </div>
+                                <div class="transaction">
+                                    <div class="transaction-info">
+                                        <span class="transaction-name">🏦 Interest Earned</span>
+                                        <span class="transaction-date">1 week ago</span>
+                                    </div>
+                                    <span class="transaction-amount plus">+$45.23</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Health & Goals -->
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h3>💪 Financial Health</h3>
+                            <div class="health-metrics">
+                                <div class="health-item">
+                                    <span class="health-label">Credit Score</span>
+                                    <div class="health-score">750</div>
+                                    <div class="health-bar">
+                                        <div class="health-progress" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                                <div class="health-item">
+                                    <span class="health-label">Savings Rate</span>
+                                    <div class="health-score">32%</div>
+                                    <div class="health-bar">
+                                        <div class="health-progress" style="width: 85%; background: #4caf50;"></div>
+                                    </div>
+                                </div>
+                                <div class="health-item">
+                                    <span class="health-label">Debt-to-Income</span>
+                                    <div class="health-score">18%</div>
+                                    <div class="health-bar">
+                                        <div class="health-progress" style="width: 45%; background: #4caf50;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="analytics-card">
+                            <h3>🎯 Financial Goals</h3>
+                            <div class="goals-list">
+                                <div class="goal-item">
+                                    <div class="goal-header">
+                                        <span class="goal-name">Emergency Fund</span>
+                                        <span class="goal-percentage">68%</span>
+                                    </div>
+                                    <div class="goal-bar">
+                                        <div class="goal-progress" style="width: 68%"></div>
+                                    </div>
+                                    <div class="goal-details">$6,800 of $10,000</div>
+                                </div>
+                                <div class="goal-item">
+                                    <div class="goal-header">
+                                        <span class="goal-name">Vacation Fund</span>
+                                        <span class="goal-percentage">45%</span>
+                                    </div>
+                                    <div class="goal-bar">
+                                        <div class="goal-progress" style="width: 45%; background: #ff9800;"></div>
+                                    </div>
+                                    <div class="goal-details">$2,250 of $5,000</div>
+                                </div>
+                                <div class="goal-item">
+                                    <div class="goal-header">
+                                        <span class="goal-name">Home Down Payment</span>
+                                        <span class="goal-percentage">32%</span>
+                                    </div>
+                                    <div class="goal-bar">
+                                        <div class="goal-progress" style="width: 32%; background: #2196f3;"></div>
+                                    </div>
+                                    <div class="goal-details">$16,000 of $50,000</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-actions">
+                    <a href="/profile" class="action-btn primary-btn">✏️ View Profile</a>
+                    <a href="/logout" class="action-btn secondary-btn">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .dashboard-wrapper {
+            min-height: 100vh;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-greeting {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-link:hover {
+            opacity: 0.8;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .dashboard-container {
+            padding: 40px 0;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-icon {
+            font-size: 24px;
+        }
+
+        .card-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .card-label {
+            color: #999;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .account-card .card-amount { color: #667eea; }
+        .income-card .card-amount { color: #4caf50; }
+        .expense-card .card-amount { color: #f44336; }
+        .savings-card .card-amount { color: #ff9800; }
+
+        .analytics-section {
+            margin-bottom: 40px;
+        }
+
+        .analytics-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .analytics-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .analytics-card h3 {
+            color: #333;
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .category-item {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .category-label {
+            min-width: 140px;
+            font-size: 14px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .category-bar {
+            flex: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .category-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+        }
+
+        .category-value {
+            min-width: 70px;
+            text-align: right;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .transactions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .transaction {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .transaction:hover {
+            background: #f0f0f0;
+        }
+
+        .transaction-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .transaction-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .transaction-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .transaction-amount {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .transaction-amount.plus {
+            color: #4caf50;
+        }
+
+        .transaction-amount.minus {
+            color: #f44336;
+        }
+
+        .health-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .health-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .health-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .health-score {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .health-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .health-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+        }
+
+        .goals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .goal-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .goal-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .goal-percentage {
+            font-size: 14px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .goal-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .goal-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+        }
+
+        .goal-details {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .secondary-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .secondary-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 1024px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script>
+        async function loadDashboardData() {
+            try {
+                // Fetch all analytics data in parallel
+                const [spendingData, incomeExpenseData, transactionsData, goalsData, savingsData] = await Promise.all([
+                    fetch('/api/analytics/spending-by-category').then(r => r.json()),
+                    fetch('/api/analytics/income-expenses').then(r => r.json()),
+                    fetch('/api/analytics/transactions').then(r => r.json()),
+                    fetch('/api/analytics/goals').then(r => r.json()),
+                    fetch('/api/analytics/savings-rate').then(r => r.json())
+                ]);
+
+                // Hide loading, show dashboard
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard-main').style.display = 'block';
+
+                // Update account summary cards
+                updateAccountCards(incomeExpenseData, savingsData);
+
+                // Update spending by category chart
+                updateSpendingChart(spendingData);
+
+                // Update recent transactions
+                updateTransactions(transactionsData);
+
+                // Update financial goals
+                updateGoals(goalsData);
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                // Show error state
+                document.getElementById('loading').innerHTML = `
+                    <div class="error-state">
+                        <p>❌ Unable to load financial data</p>
+                        <p>Please <a href="/auth/zoho">connect Zoho Analytics</a> first</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateAccountCards(incomeExpenseData, savingsData) {
+            // Update balance card
+            const balanceCard = document.querySelector('.account-card .card-amount');
+            if (balanceCard) {
+                balanceCard.textContent = '$' + (incomeExpenseData.balance || '0.00');
+            }
+
+            // Update income card
+            const incomeCard = document.querySelector('.income-card .card-amount');
+            if (incomeCard) {
+                incomeCard.textContent = '$' + (incomeExpenseData.totalIncome || '0.00');
+            }
+
+            // Update expenses card
+            const expenseCard = document.querySelector('.expense-card .card-amount');
+            if (expenseCard) {
+                expenseCard.textContent = '$' + (Math.abs(incomeExpenseData.totalExpenses) || '0.00');
+            }
+
+            // Update savings rate card
+            const savingsCard = document.querySelector('.savings-card .card-amount');
+            if (savingsCard) {
+                savingsCard.textContent = (savingsData.savingsRate || '0') + '%';
+            }
+        }
+
+        function updateSpendingChart(spendingData) {
+            const chartContainer = document.querySelector('.spending-chart');
+            if (!chartContainer || !spendingData.categories) return;
+
+            const categories = spendingData.categories.slice(0, 5); // Top 5 categories
+            const html = categories.map(cat => `
+                <div class="chart-bar">
+                    <div class="bar-label">${cat.category}</div>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: ${cat.percentage}%"></div>
+                    </div>
+                    <div class="bar-value">$${cat.amount}</div>
+                </div>
+            `).join('');
+
+            chartContainer.innerHTML = html;
+        }
+
+        function updateTransactions(transactionsData) {
+            const transactionsContainer = document.querySelector('.recent-transactions');
+            if (!transactionsContainer || !transactionsData.transactions) return;
+
+            const transactions = transactionsData.transactions.slice(0, 5); // Recent 5
+            const html = transactions.map(tx => `
+                <div class="transaction">
+                    <div class="transaction-info">
+                        <span class="transaction-name">${tx.description}</span>
+                        <span class="transaction-date">${new Date(tx.date).toLocaleDateString()}</span>
+                    </div>
+                    <span class="transaction-amount ${tx.amount >= 0 ? 'plus' : 'minus'}">
+                        ${tx.amount >= 0 ? '+' : ''}$${Math.abs(tx.amount).toFixed(2)}
+                    </span>
+                </div>
+            `).join('');
+
+            transactionsContainer.innerHTML = html;
+        }
+
+        function updateGoals(goalsData) {
+            const goalsContainer = document.querySelector('.goals-list');
+            if (!goalsContainer || !goalsData.goals) return;
+
+            const goals = goalsData.goals.slice(0, 3); // Top 3 goals
+            const html = goals.map(goal => {
+                const progress = (goal.currentAmount / goal.targetAmount) * 100;
+                return `
+                    <div class="goal-item">
+                        <div class="goal-header">
+                            <span class="goal-name">${goal.goalName}</span>
+                            <span class="goal-progress">${progress.toFixed(1)}%</span>
+                        </div>
+                        <div class="goal-bar">
+                            <div class="goal-fill" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="goal-amounts">
+                            <span>$${goal.currentAmount} / $${goal.targetAmount}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            goalsContainer.innerHTML = html;
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadDashboardData);
+    </script>
+</body>
+</html>

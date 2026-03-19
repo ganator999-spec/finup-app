@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - FinUp</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <nav class="navbar">
+            <div class="navbar-content">
+                <h2>👤 FinUp Profile</h2>
+                <div class="navbar-actions">
+                    <a href="/dashboard" class="nav-link">← Back to Dashboard</a>
+                    <a href="/logout" class="logout-btn">🚪 Logout</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="dashboard-container">
+                <h1>Your Profile Information</h1>
+
+                <div class="profile-grid">
+                    <!-- Personal Information -->
+                    <div class="profile-card">
+                        <h3>📋 Personal Information</h3>
+                        <div class="profile-info-grid">
+                            <div class="profile-info-item">
+                                <label>First Name</label>
+                                <p><%= client.firstName %></p>
+                            </div>
+                            <div class="profile-info-item">
+                                <label>Last Name</label>
+                                <p><%= client.lastName %></p>
+                            </div>
+                            <div class="profile-info-item full-width">
+                                <label>Email</label>
+                                <p><%= client.email %></p>
+                            </div>
+                            <div class="profile-info-item full-width">
+                                <label>Phone</label>
+                                <p><%= client.phone %></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Information -->
+                    <div class="profile-card">
+                        <h3>💼 Professional Information</h3>
+                        <div class="profile-info-grid">
+                            <div class="profile-info-item full-width">
+                                <label>Company</label>
+                                <p><%= client.company %></p>
+                            </div>
+                            <div class="profile-info-item full-width">
+                                <label>Position</label>
+                                <p><%= client.position %></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div class="profile-card">
+                        <h3>📍 Address</h3>
+                        <div class="profile-info-grid">
+                            <div class="profile-info-item full-width">
+                                <label>Street</label>
+                                <p><%= client.address.street %></p>
+                            </div>
+                            <div class="profile-info-item">
+                                <label>City</label>
+                                <p><%= client.address.city %></p>
+                            </div>
+                            <div class="profile-info-item">
+                                <label>State</label>
+                                <p><%= client.address.state %></p>
+                            </div>
+                            <div class="profile-info-item">
+                                <label>Zip Code</label>
+                                <p><%= client.address.zipCode %></p>
+                            </div>
+                            <div class="profile-info-item full-width">
+                                <label>Country</label>
+                                <p><%= client.address.country %></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Status -->
+                    <div class="profile-card">
+                        <h3>ℹ️ Account Status</h3>
+                        <div class="profile-info-grid">
+                            <div class="profile-info-item">
+                                <label>Account Created</label>
+                                <p><%= new Date(client.createdAt).toLocaleDateString() %></p>
+                            </div>
+                            <div class="profile-info-item">
+                                <label>Member Since</label>
+                                <p><%= new Date(client.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) %></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <a href="/edit-profile" class="action-btn primary-btn">✏️ Edit Profile</a>
+                    <a href="/dashboard" class="action-btn secondary-btn">📊 Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .profile-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .profile-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .profile-info-item label {
+            font-weight: 600;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .profile-info-item p {
+            color: #333;
+            font-size: 16px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .secondary-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .secondary-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</body>
+</html>
