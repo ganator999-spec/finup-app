@@ -216,6 +216,36 @@ input::placeholder {
     height: 100%;
 }
 
+.analytics-load-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 42px;
+    color: #9b2c2c;
+    font-size: 13px;
+}
+
+.retry-btn {
+    border: 1px solid #c53030;
+    border-radius: 6px;
+    background: #fff;
+    color: #c53030;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    padding: 6px 12px;
+}
+
+.retry-btn:hover {
+    background: #fff5f5;
+}
+
+.retry-btn:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
 @keyframes loading-shimmer {
     from { background-position: 200% 0; }
     to { background-position: -200% 0; }

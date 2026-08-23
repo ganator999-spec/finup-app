@@ -23,6 +23,8 @@ class ZohoAnalyticsClient {
     this.goalsTableName = tableConfig.GOALS_TABLE_NAME || 'GOALS';
     this.viewNameCache = new Map();
     this.exportQueue = Promise.resolve();
+    this.queryCache = new Map();
+    this.queryCacheTtlMs = 5 * 60 * 1000;
   }
 
   getRequestedScopes() {
@@ -63,12 +65,6 @@ class ZohoAnalyticsClient {
       prompt: 'consent'
     });
     const authUrl = `${this.authHost}/oauth/v2/auth?${params.toString()}`;
-    console.log('[Zoho] OAuth authorization requested', {
-      authDomain: this.authDomain,
-      requestedScopes: this.getRequestedScopes(),
-      redirectUri: this.redirectUri,
-      prompt: 'consent'
-    });
     return authUrl;
   }
 
@@ -84,13 +80,6 @@ class ZohoAnalyticsClient {
           grant_type: 'authorization_code',
           scope: this.getRequestedScopes()
         }
-      });
-
-      console.log('[Zoho] OAuth token granted', {
-        grantedScopes: response.data.scope || 'scope not returned by Zoho',
-        hasAccessToken: Boolean(response.data.access_token),
-        hasRefreshToken: Boolean(response.data.refresh_token),
-        expiresIn: response.data.expires_in
       });
 
       return {
@@ -129,10 +118,6 @@ class ZohoAnalyticsClient {
   }
 
   async getOrganizationId(accessToken) {
-    console.log('[Zoho] Resolving organization ID', {
-      endpoint: `${this.apiBaseUrl}/restapi/v2/orgs`,
-      requiredScope: 'ZohoAnalytics.metadata.read'
-    });
     const response = await axios.get(`${this.apiBaseUrl}/restapi/v2/orgs`, {
       headers: { Authorization: `Zoho-oauthtoken ${accessToken}` }
     });
@@ -142,7 +127,6 @@ class ZohoAnalyticsClient {
     if (!organizationId) {
       throw new Error('No Zoho Analytics organization was found');
     }
-    console.log('[Zoho] Organization ID resolved', { organizationId });
     return organizationId;
   }
 
@@ -172,7 +156,45 @@ class ZohoAnalyticsClient {
 
   // Query Zoho Analytics table
   async queryTable(tableId, accessToken, query, orgId) {
-    return this.enqueueExport(() => this.executeQuery(tableId, accessToken, query, orgId));
+    const cacheKey = JSON.stringify({
+      tableId,
+      query,
+      accessToken,
+      orgId: orgId || process.env.ZOHO_ANALYTICS_ORG_ID,
+      workspaceId: this.workspaceId
+    });
+    const cached = this.queryCache.get(cacheKey);
+
+    if (cached) {
+      if (cached.data && cached.expiresAt > Date.now()) {
+        console.log('[Zoho] Cache data used', {
+          tableId,
+          rowCount: this.extractRows(cached.data).length,
+          cacheAgeSeconds: Math.round((Date.now() - cached.cachedAt) / 1000)
+        });
+        return cached.data;
+      }
+      if (cached.promise) return cached.promise;
+      this.queryCache.delete(cacheKey);
+    }
+
+    const promise = this.enqueueExport(() => this.executeQuery(tableId, accessToken, query, orgId))
+      .then((data) => {
+        this.queryCache.set(cacheKey, {
+          data,
+          cachedAt: Date.now(),
+          expiresAt: Date.now() + this.queryCacheTtlMs
+        });
+        return data;
+      })
+      .catch((error) => {
+        const current = this.queryCache.get(cacheKey);
+        if (current?.promise === promise) this.queryCache.delete(cacheKey);
+        throw error;
+      });
+
+    this.queryCache.set(cacheKey, { promise });
+    return promise;
   }
 
   enqueueExport(task) {
@@ -187,12 +209,9 @@ class ZohoAnalyticsClient {
         || process.env.ZOHO_ANALYTICS_ORG_ID
         || await this.getOrganizationId(accessToken);
       const resolvedTableName = await this.getViewName(tableId, accessToken, resolvedOrgId);
-      console.log('[Zoho] Query configuration', {
+      console.log('[Zoho] Table consulted', {
         tableId,
-        tableName: resolvedTableName,
-        workspaceId: this.workspaceId,
-        organizationId: resolvedOrgId,
-        requiredScope: 'ZohoAnalytics.data.read'
+        tableName: resolvedTableName
       });
 
       const headers = {
@@ -205,8 +224,6 @@ class ZohoAnalyticsClient {
           .replaceAll(`"${this.goalsTableName}"`, `"${resolvedTableName}"`),
         responseFormat: 'json'
       }));
-      const submittedQuery = JSON.parse(decodeURIComponent(config)).sqlQuery;
-      console.log('[Zoho] Export job submitted', { tableName: resolvedTableName, query: submittedQuery });
       const jobResponse = await axios.get(
         `${this.apiBaseUrl}/restapi/v2/bulk/workspaces/${this.workspaceId}/data?CONFIG=${config}`,
         { headers }
@@ -222,21 +239,16 @@ class ZohoAnalyticsClient {
           { headers }
         );
         const job = statusResponse.data?.data;
-        console.log('[Zoho] Export job status', {
-          jobId,
-          attempt: attempt + 1,
-          jobCode: job?.jobCode,
-          jobStatus: job?.jobStatus
-        });
         if (job?.jobCode === '1004' || job?.jobCode === 1004) {
           const dataResponse = await axios.get(
             `${this.apiBaseUrl}/restapi/v2/bulk/workspaces/${this.workspaceId}/exportjobs/${jobId}/data`,
             { headers }
           );
           const result = dataResponse.data;
-          console.log('[Zoho] Export data received', {
-            responseKeys: Object.keys(result || {}),
-            rowCount: this.extractRows(result).length
+          console.log('[Zoho] Data retrieved', {
+            tableName: resolvedTableName,
+            rowCount: this.extractRows(result).length,
+            data: this.extractRows(result)
           });
           return result;
         }

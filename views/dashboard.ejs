@@ -107,23 +107,23 @@
                             <div class="health-metrics">
                                 <div class="health-item">
                                     <span class="health-label">Credit Score</span>
-                                    <div class="health-score"><span class="loading-skeleton loading-small-value"></span></div>
+                                    <div class="health-score health-unavailable">Not available</div>
                                     <div class="health-bar">
-                                        <div class="loading-skeleton loading-progress"></div>
+                                        <div class="health-progress health-unavailable-bar"></div>
                                     </div>
                                 </div>
                                 <div class="health-item">
                                     <span class="health-label">Savings Rate</span>
-                                    <div class="health-score"><span class="loading-skeleton loading-small-value"></span></div>
+                                    <div class="health-score"><span class="loading-skeleton loading-small-value" data-health-savings></span></div>
                                     <div class="health-bar">
-                                        <div class="loading-skeleton loading-progress"></div>
+                                        <div class="loading-skeleton loading-progress" data-health-savings-bar></div>
                                     </div>
                                 </div>
                                 <div class="health-item">
                                     <span class="health-label">Debt-to-Income</span>
-                                    <div class="health-score"><span class="loading-skeleton loading-small-value"></span></div>
+                                    <div class="health-score health-unavailable">Not available</div>
                                     <div class="health-bar">
-                                        <div class="loading-skeleton loading-progress"></div>
+                                        <div class="health-progress health-unavailable-bar"></div>
                                     </div>
                                 </div>
                             </div>
@@ -431,6 +431,16 @@
             border-radius: 3px;
         }
 
+        .health-unavailable {
+            color: #999;
+            font-size: 16px;
+        }
+
+        .health-unavailable-bar {
+            width: 0;
+            background: #d9dde2;
+        }
+
         .goals-list {
             display: flex;
             flex-direction: column;
@@ -525,54 +535,78 @@
 
     <script>
         async function loadDashboardData() {
-            try {
-                const requests = [
-                    ['Spending by category', '/api/analytics/spending-by-category'],
-                    ['Income and expenses', '/api/analytics/income-expenses'],
-                    ['Transactions', '/api/analytics/transactions'],
-                    ['Financial goals', '/api/analytics/goals'],
-                    ['Savings rate', '/api/analytics/savings-rate']
-                ];
-                const results = await Promise.allSettled(requests.map(async ([name, url]) => {
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(`${name}: ${data.error || `Request failed (${response.status})`}`);
-                    }
-                    return data;
-                }));
+            const requests = [
+                { name: 'Spending by category', url: '/api/analytics/spending-by-category', selector: '.category-list' },
+                { name: 'Income and expenses', url: '/api/analytics/income-expenses', selector: '.account-card .card-amount' },
+                { name: 'Transactions', url: '/api/analytics/transactions', selector: '.transactions-list' },
+                { name: 'Financial goals', url: '/api/analytics/goals', selector: '.goals-list' },
+                { name: 'Savings rate', url: '/api/analytics/savings-rate', selector: '.savings-card .card-amount' }
+            ];
 
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('dashboard-main').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard-main').style.display = 'block';
 
-                const [spendingResult, incomeExpenseResult, transactionsResult, goalsResult, savingsResult] = results;
-                const failures = results
-                    .map((result) => result.status === 'rejected' ? result.reason.message : null)
-                    .filter(Boolean);
-                if (failures.length) {
-                    const notice = document.createElement('div');
-                    notice.className = 'dashboard-error';
-                    notice.textContent = `Some financial data could not be loaded: ${failures.join(' | ')}`;
-                    document.getElementById('dashboard-main').prepend(notice);
-                }
+            const results = await Promise.all(requests.map((request) => runAnalyticsRequest(request)));
+            const incomeExpenseResult = results[1];
+            const savingsResult = results[4];
+            if (incomeExpenseResult.status === 'fulfilled') updateAccountCards(incomeExpenseResult.value, savingsResult.status === 'fulfilled' ? savingsResult.value : {});
+            if (results[0].status === 'fulfilled') updateSpendingChart(results[0].value);
+            if (results[2].status === 'fulfilled') updateTransactions(results[2].value);
+            if (results[3].status === 'fulfilled') updateGoals(results[3].value);
+        }
 
-                if (incomeExpenseResult.status === 'fulfilled' && savingsResult.status === 'fulfilled') {
-                    updateAccountCards(incomeExpenseResult.value, savingsResult.value);
-                }
-
-                if (spendingResult.status === 'fulfilled') updateSpendingChart(spendingResult.value);
-                if (transactionsResult.status === 'fulfilled') updateTransactions(transactionsResult.value);
-                if (goalsResult.status === 'fulfilled') updateGoals(goalsResult.value);
-
-            } catch (error) {
-                console.error('Error loading dashboard data:', error);
-                document.getElementById('loading').innerHTML = `
-                    <div class="error-state">
-                        <p>❌ Unable to load financial data</p>
-                        <p>${error.message}</p>
-                    </div>
-                `;
+        async function fetchAnalyticsData(request) {
+            const response = await fetch(request.url);
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || `Request failed (${response.status})`);
             }
+            return data;
+        }
+
+        async function runAnalyticsRequest(request, retryCount = 2) {
+            const target = document.querySelector(request.selector);
+            for (let attempt = 0; attempt <= retryCount; attempt += 1) {
+                try {
+                    const data = await fetchAnalyticsData(request);
+                    clearAnalyticsError(target);
+                    return { status: 'fulfilled', value: data };
+                } catch (error) {
+                    if (attempt === retryCount) {
+                        console.error(`[Dashboard] ${request.name} failed after ${retryCount + 1} attempts:`, error);
+                        showAnalyticsError(target, request);
+                        return { status: 'rejected', reason: error };
+                    }
+                    await new Promise((resolve) => setTimeout(resolve, 750 * (attempt + 1)));
+                }
+            }
+        }
+
+        function showAnalyticsError(target, request) {
+            if (!target) return;
+            target.classList.remove('loading-list');
+            target.innerHTML = `
+                <div class="analytics-load-error">
+                    <strong>Unable to load ${request.name.toLowerCase()}</strong>
+                    <button type="button" class="retry-btn">Retry</button>
+                </div>
+            `;
+            target.querySelector('.retry-btn').addEventListener('click', async (event) => {
+                event.currentTarget.disabled = true;
+                target.innerHTML = '<div class="loading-skeleton loading-row"></div>';
+                const result = await runAnalyticsRequest(request, 2);
+                if (result.status === 'fulfilled') {
+                    if (request.name === 'Spending by category') updateSpendingChart(result.value);
+                    if (request.name === 'Transactions') updateTransactions(result.value);
+                    if (request.name === 'Financial goals') updateGoals(result.value);
+                    if (request.name === 'Income and expenses') updateAccountCards(result.value, {});
+                    if (request.name === 'Savings rate') updateAccountCards({}, result.value);
+                }
+            });
+        }
+
+        function clearAnalyticsError(target) {
+            if (target) target.classList.remove('loading-list');
         }
 
         function updateAccountCards(incomeExpenseData, savingsData) {
@@ -584,20 +618,30 @@
 
             // Update income card
             const incomeCard = document.querySelector('.income-card .card-amount');
-            if (incomeCard) {
+            if (incomeCard && incomeExpenseData.totalIncome !== undefined) {
                 incomeCard.textContent = '$' + (incomeExpenseData.totalIncome || '0.00');
             }
 
             // Update expenses card
             const expenseCard = document.querySelector('.expense-card .card-amount');
-            if (expenseCard) {
+            if (expenseCard && incomeExpenseData.totalExpenses !== undefined) {
                 expenseCard.textContent = '$' + (Math.abs(incomeExpenseData.totalExpenses) || '0.00');
             }
 
             // Update savings rate card
             const savingsCard = document.querySelector('.savings-card .card-amount');
-            if (savingsCard) {
+            if (savingsCard && savingsData.savingsRate !== undefined) {
                 savingsCard.textContent = (savingsData.savingsRate || '0') + '%';
+            }
+
+            const healthSavings = document.querySelector('[data-health-savings]');
+            const healthSavingsBar = document.querySelector('[data-health-savings-bar]');
+            if (healthSavings && savingsData.savingsRate !== undefined) {
+                const savingsRate = Number(savingsData.savingsRate) || 0;
+                healthSavings.className = 'health-score';
+                healthSavings.textContent = savingsRate.toFixed(1) + '%';
+                healthSavingsBar.className = 'health-progress';
+                healthSavingsBar.style.width = `${Math.max(0, Math.min(100, savingsRate))}%`;
             }
         }
 
