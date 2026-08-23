@@ -17,6 +17,7 @@
                         <a href="/auth/zoho" class="nav-link connect-zoho">🔗 Connect Zoho Analytics</a>
                     <% } else { %>
                         <span class="zoho-connected">✅ Zoho Connected</span>
+                        <a href="/auth/zoho" class="nav-link reconnect-zoho">Reconnect</a>
                     <% } %>
                     <a href="/profile" class="nav-link">👤 Profile</a>
                     <a href="/logout" class="logout-btn">🚪 Logout</a>
@@ -33,7 +34,7 @@
                 </div>
 
                 <!-- Dashboard Content (populated by JavaScript) -->
-                <div class="dashboard-content" id="dashboard-main" style="display: none;">
+                <div class="dashboard-content" id="dashboard-main">
                 <!-- Account Summary Cards -->
                 <div class="cards-grid">
                     <div class="card account-card">
@@ -41,9 +42,7 @@
                             <h3>Account Balance</h3>
                             <span class="card-icon">💳</span>
                         </div>
-                        <div class="card-amount">
-                            $<%= (Math.random() * 50000 + 5000).toFixed(2) %>
-                        </div>
+                        <div class="card-amount"><span class="loading-skeleton loading-value"></span></div>
                         <p class="card-label">Total Available</p>
                     </div>
 
@@ -52,9 +51,7 @@
                             <h3>Monthly Income</h3>
                             <span class="card-icon">📈</span>
                         </div>
-                        <div class="card-amount">
-                            $<%= (Math.random() * 8000 + 3000).toFixed(2) %>
-                        </div>
+                        <div class="card-amount"><span class="loading-skeleton loading-value"></span></div>
                         <p class="card-label">This Month</p>
                     </div>
 
@@ -63,9 +60,7 @@
                             <h3>Monthly Expenses</h3>
                             <span class="card-icon">📉</span>
                         </div>
-                        <div class="card-amount">
-                            $<%= (Math.random() * 3000 + 500).toFixed(2) %>
-                        </div>
+                        <div class="card-amount"><span class="loading-skeleton loading-value"></span></div>
                         <p class="card-label">This Month</p>
                     </div>
 
@@ -74,9 +69,7 @@
                             <h3>Savings Goal</h3>
                             <span class="card-icon">🎯</span>
                         </div>
-                        <div class="card-amount">
-                            <%= Math.floor(Math.random() * 40 + 60) %>%
-                        </div>
+                        <div class="card-amount"><span class="loading-skeleton loading-value"></span></div>
                         <p class="card-label">Progress</p>
                     </div>
                 </div>
@@ -89,84 +82,20 @@
                         <!-- Spending by Category -->
                         <div class="analytics-card">
                             <h3>Spending by Category</h3>
-                            <div class="category-list">
-                                <div class="category-item">
-                                    <span class="category-label">🍔 Food & Dining</span>
-                                    <div class="category-bar">
-                                        <div class="category-progress" style="width: 35%"></div>
-                                    </div>
-                                    <span class="category-value">$850</span>
-                                </div>
-                                <div class="category-item">
-                                    <span class="category-label">🚗 Transportation</span>
-                                    <div class="category-bar">
-                                        <div class="category-progress" style="width: 25%"></div>
-                                    </div>
-                                    <span class="category-value">$600</span>
-                                </div>
-                                <div class="category-item">
-                                    <span class="category-label">🏠 Housing</span>
-                                    <div class="category-bar">
-                                        <div class="category-progress" style="width: 40%"></div>
-                                    </div>
-                                    <span class="category-value">$1,200</span>
-                                </div>
-                                <div class="category-item">
-                                    <span class="category-label">🎮 Entertainment</span>
-                                    <div class="category-bar">
-                                        <div class="category-progress" style="width: 15%"></div>
-                                    </div>
-                                    <span class="category-value">$350</span>
-                                </div>
-                                <div class="category-item">
-                                    <span class="category-label">📚 Utilities</span>
-                                    <div class="category-bar">
-                                        <div class="category-progress" style="width: 20%"></div>
-                                    </div>
-                                    <span class="category-value">$450</span>
-                                </div>
+                            <div class="category-list loading-list">
+                                <div class="loading-skeleton loading-row"></div>
+                                <div class="loading-skeleton loading-row"></div>
+                                <div class="loading-skeleton loading-row"></div>
                             </div>
                         </div>
 
                         <!-- Recent Transactions -->
                         <div class="analytics-card">
                             <h3>Recent Transactions</h3>
-                            <div class="transactions-list">
-                                <div class="transaction">
-                                    <div class="transaction-info">
-                                        <span class="transaction-name">🛒 Amazon Purchase</span>
-                                        <span class="transaction-date">Today</span>
-                                    </div>
-                                    <span class="transaction-amount minus">-$125.99</span>
-                                </div>
-                                <div class="transaction">
-                                    <div class="transaction-info">
-                                        <span class="transaction-name">💼 Salary Deposit</span>
-                                        <span class="transaction-date">2 days ago</span>
-                                    </div>
-                                    <span class="transaction-amount plus">+$4,500.00</span>
-                                </div>
-                                <div class="transaction">
-                                    <div class="transaction-info">
-                                        <span class="transaction-name">☕ Coffee Shop</span>
-                                        <span class="transaction-date">3 days ago</span>
-                                    </div>
-                                    <span class="transaction-amount minus">-$5.50</span>
-                                </div>
-                                <div class="transaction">
-                                    <div class="transaction-info">
-                                        <span class="transaction-name">🎬 Netflix</span>
-                                        <span class="transaction-date">5 days ago</span>
-                                    </div>
-                                    <span class="transaction-amount minus">-$15.99</span>
-                                </div>
-                                <div class="transaction">
-                                    <div class="transaction-info">
-                                        <span class="transaction-name">🏦 Interest Earned</span>
-                                        <span class="transaction-date">1 week ago</span>
-                                    </div>
-                                    <span class="transaction-amount plus">+$45.23</span>
-                                </div>
+                            <div class="transactions-list loading-list">
+                                <div class="loading-skeleton loading-row"></div>
+                                <div class="loading-skeleton loading-row"></div>
+                                <div class="loading-skeleton loading-row"></div>
                             </div>
                         </div>
                     </div>
@@ -178,23 +107,23 @@
                             <div class="health-metrics">
                                 <div class="health-item">
                                     <span class="health-label">Credit Score</span>
-                                    <div class="health-score">750</div>
+                                    <div class="health-score"><span class="loading-skeleton loading-small-value"></span></div>
                                     <div class="health-bar">
-                                        <div class="health-progress" style="width: 75%"></div>
+                                        <div class="loading-skeleton loading-progress"></div>
                                     </div>
                                 </div>
                                 <div class="health-item">
                                     <span class="health-label">Savings Rate</span>
-                                    <div class="health-score">32%</div>
+                                    <div class="health-score"><span class="loading-skeleton loading-small-value"></span></div>
                                     <div class="health-bar">
-                                        <div class="health-progress" style="width: 85%; background: #4caf50;"></div>
+                                        <div class="loading-skeleton loading-progress"></div>
                                     </div>
                                 </div>
                                 <div class="health-item">
                                     <span class="health-label">Debt-to-Income</span>
-                                    <div class="health-score">18%</div>
+                                    <div class="health-score"><span class="loading-skeleton loading-small-value"></span></div>
                                     <div class="health-bar">
-                                        <div class="health-progress" style="width: 45%; background: #4caf50;"></div>
+                                        <div class="loading-skeleton loading-progress"></div>
                                     </div>
                                 </div>
                             </div>
@@ -202,37 +131,10 @@
 
                         <div class="analytics-card">
                             <h3>🎯 Financial Goals</h3>
-                            <div class="goals-list">
-                                <div class="goal-item">
-                                    <div class="goal-header">
-                                        <span class="goal-name">Emergency Fund</span>
-                                        <span class="goal-percentage">68%</span>
-                                    </div>
-                                    <div class="goal-bar">
-                                        <div class="goal-progress" style="width: 68%"></div>
-                                    </div>
-                                    <div class="goal-details">$6,800 of $10,000</div>
-                                </div>
-                                <div class="goal-item">
-                                    <div class="goal-header">
-                                        <span class="goal-name">Vacation Fund</span>
-                                        <span class="goal-percentage">45%</span>
-                                    </div>
-                                    <div class="goal-bar">
-                                        <div class="goal-progress" style="width: 45%; background: #ff9800;"></div>
-                                    </div>
-                                    <div class="goal-details">$2,250 of $5,000</div>
-                                </div>
-                                <div class="goal-item">
-                                    <div class="goal-header">
-                                        <span class="goal-name">Home Down Payment</span>
-                                        <span class="goal-percentage">32%</span>
-                                    </div>
-                                    <div class="goal-bar">
-                                        <div class="goal-progress" style="width: 32%; background: #2196f3;"></div>
-                                    </div>
-                                    <div class="goal-details">$16,000 of $50,000</div>
-                                </div>
+                            <div class="goals-list loading-list">
+                                <div class="loading-skeleton loading-row"></div>
+                                <div class="loading-skeleton loading-row"></div>
+                                <div class="loading-skeleton loading-row"></div>
                             </div>
                         </div>
                     </div>
@@ -624,38 +526,50 @@
     <script>
         async function loadDashboardData() {
             try {
-                // Fetch all analytics data in parallel
-                const [spendingData, incomeExpenseData, transactionsData, goalsData, savingsData] = await Promise.all([
-                    fetch('/api/analytics/spending-by-category').then(r => r.json()),
-                    fetch('/api/analytics/income-expenses').then(r => r.json()),
-                    fetch('/api/analytics/transactions').then(r => r.json()),
-                    fetch('/api/analytics/goals').then(r => r.json()),
-                    fetch('/api/analytics/savings-rate').then(r => r.json())
-                ]);
+                const requests = [
+                    ['Spending by category', '/api/analytics/spending-by-category'],
+                    ['Income and expenses', '/api/analytics/income-expenses'],
+                    ['Transactions', '/api/analytics/transactions'],
+                    ['Financial goals', '/api/analytics/goals'],
+                    ['Savings rate', '/api/analytics/savings-rate']
+                ];
+                const results = await Promise.allSettled(requests.map(async ([name, url]) => {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(`${name}: ${data.error || `Request failed (${response.status})`}`);
+                    }
+                    return data;
+                }));
 
-                // Hide loading, show dashboard
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('dashboard-main').style.display = 'block';
 
-                // Update account summary cards
-                updateAccountCards(incomeExpenseData, savingsData);
+                const [spendingResult, incomeExpenseResult, transactionsResult, goalsResult, savingsResult] = results;
+                const failures = results
+                    .map((result) => result.status === 'rejected' ? result.reason.message : null)
+                    .filter(Boolean);
+                if (failures.length) {
+                    const notice = document.createElement('div');
+                    notice.className = 'dashboard-error';
+                    notice.textContent = `Some financial data could not be loaded: ${failures.join(' | ')}`;
+                    document.getElementById('dashboard-main').prepend(notice);
+                }
 
-                // Update spending by category chart
-                updateSpendingChart(spendingData);
+                if (incomeExpenseResult.status === 'fulfilled' && savingsResult.status === 'fulfilled') {
+                    updateAccountCards(incomeExpenseResult.value, savingsResult.value);
+                }
 
-                // Update recent transactions
-                updateTransactions(transactionsData);
-
-                // Update financial goals
-                updateGoals(goalsData);
+                if (spendingResult.status === 'fulfilled') updateSpendingChart(spendingResult.value);
+                if (transactionsResult.status === 'fulfilled') updateTransactions(transactionsResult.value);
+                if (goalsResult.status === 'fulfilled') updateGoals(goalsResult.value);
 
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
-                // Show error state
                 document.getElementById('loading').innerHTML = `
                     <div class="error-state">
                         <p>❌ Unable to load financial data</p>
-                        <p>Please <a href="/auth/zoho">connect Zoho Analytics</a> first</p>
+                        <p>${error.message}</p>
                     </div>
                 `;
             }
@@ -688,17 +602,17 @@
         }
 
         function updateSpendingChart(spendingData) {
-            const chartContainer = document.querySelector('.spending-chart');
+            const chartContainer = document.querySelector('.category-list');
             if (!chartContainer || !spendingData.categories) return;
 
             const categories = spendingData.categories.slice(0, 5); // Top 5 categories
             const html = categories.map(cat => `
-                <div class="chart-bar">
+                <div class="category-item">
                     <div class="bar-label">${cat.category}</div>
-                    <div class="bar-container">
-                        <div class="bar-fill" style="width: ${cat.percentage}%"></div>
+                    <div class="category-bar">
+                        <div class="category-progress" style="width: ${cat.percentage}%"></div>
                     </div>
-                    <div class="bar-value">$${cat.amount}</div>
+                    <div class="category-value">$${cat.amount.toFixed(2)}</div>
                 </div>
             `).join('');
 
@@ -706,7 +620,7 @@
         }
 
         function updateTransactions(transactionsData) {
-            const transactionsContainer = document.querySelector('.recent-transactions');
+            const transactionsContainer = document.querySelector('.transactions-list');
             if (!transactionsContainer || !transactionsData.transactions) return;
 
             const transactions = transactionsData.transactions.slice(0, 5); // Recent 5
@@ -739,7 +653,7 @@
                             <span class="goal-progress">${progress.toFixed(1)}%</span>
                         </div>
                         <div class="goal-bar">
-                            <div class="goal-fill" style="width: ${progress}%"></div>
+                            <div class="goal-progress" style="width: ${progress}%"></div>
                         </div>
                         <div class="goal-amounts">
                             <span>$${goal.currentAmount} / $${goal.targetAmount}</span>

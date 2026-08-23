@@ -7,6 +7,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const path = require('path');
+const crypto = require('crypto');
 const session = require('express-session');
 const zohoAnalytics = require('./services/zohoAnalytics');
 
@@ -158,6 +159,111 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// PASSWORD RESET ROUTES
+app.get('/forgot-password', (req, res) => {
+  res.render('forgot-password', { message: null, error: null, email: '' });
+});
+
+app.post('/forgot-password', async (req, res) => {
+  const email = (req.body.email || '').trim().toLowerCase();
+  const genericMessage = 'If an account exists for that email, a password reset link has been sent.';
+
+  try {
+    const Client = require('./models/Client');
+    const client = await Client.findOne({ email });
+
+    if (client) {
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      client.passwordResetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+      client.passwordResetTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+      await client.save();
+
+      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
+      console.log(`Password reset link for ${email}: ${resetUrl}`);
+    }
+
+    res.render('forgot-password', { message: genericMessage, error: null, email: '' });
+  } catch (error) {
+    console.error('Password reset request error:', error);
+    res.render('forgot-password', {
+      message: null,
+      error: 'Unable to process your request right now. Please try again.',
+      email
+    });
+  }
+});
+
+app.get('/reset-password/:token', async (req, res) => {
+  try {
+    const tokenHash = crypto.createHash('sha256').update(req.params.token).digest('hex');
+    const Client = require('./models/Client');
+    const client = await Client.findOne({
+      passwordResetTokenHash: tokenHash,
+      passwordResetTokenExpiresAt: { $gt: new Date() }
+    });
+
+    if (!client) {
+      return res.status(400).render('reset-password', {
+        token: '',
+        error: 'This password reset link is invalid or has expired.',
+        message: null
+      });
+    }
+
+    res.render('reset-password', { token: req.params.token, error: null, message: null });
+  } catch (error) {
+    console.error('Password reset page error:', error);
+    res.status(400).render('reset-password', {
+      token: '',
+      error: 'This password reset link is invalid or has expired.',
+      message: null
+    });
+  }
+});
+
+app.post('/reset-password/:token', async (req, res) => {
+  const { password, confirmPassword } = req.body;
+  const tokenHash = crypto.createHash('sha256').update(req.params.token).digest('hex');
+  const renderError = (error) => res.status(400).render('reset-password', {
+    token: req.params.token,
+    error,
+    message: null
+  });
+
+  if (!password || password.length < 6) {
+    return renderError('Password must be at least 6 characters long.');
+  }
+  if (password !== confirmPassword) {
+    return renderError('Passwords do not match.');
+  }
+
+  try {
+    const Client = require('./models/Client');
+    const client = await Client.findOne({
+      passwordResetTokenHash: tokenHash,
+      passwordResetTokenExpiresAt: { $gt: new Date() }
+    });
+
+    if (!client) {
+      return renderError('This password reset link is invalid or has expired.');
+    }
+
+    client.password = password;
+    client.passwordResetTokenHash = null;
+    client.passwordResetTokenExpiresAt = null;
+    await client.save();
+
+    res.render('reset-password', {
+      token: '',
+      error: null,
+      message: 'Your password has been updated. You can now sign in.'
+    });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    renderError('Unable to reset your password right now. Please try again.');
+  }
+});
+
 // DASHBOARD ROUTE
 app.get('/dashboard', requireAuth, async (req, res) => {
   try {
@@ -212,14 +318,14 @@ app.get('/logout', (req, res) => {
 
 // ZOHO ANALYTICS OAUTH ROUTES
 // Redirect to Zoho login
-app.get('/auth/zoho', (req, res) => {
+app.get('/auth/zoho', requireAuth, (req, res) => {
   const authUrl = zohoAnalytics.getAuthorizationUrl();
   console.log('Redirecting to Zoho OAuth URL:', authUrl);
   res.redirect(authUrl);
 });
 
 // Zoho callback handler
-app.get('/auth/zoho/callback', async (req, res) => {
+app.get('/auth/zoho/callback', requireAuth, async (req, res) => {
   try {
     const { code } = req.query;
 
@@ -237,7 +343,9 @@ app.get('/auth/zoho/callback', async (req, res) => {
       {
         zohoAccessToken: tokens.accessToken,
         zohoRefreshToken: tokens.refreshToken,
-        zohoTokenExpiresAt: new Date(Date.now() + tokens.expiresIn * 1000)
+        zohoTokenExpiresAt: new Date(Date.now() + tokens.expiresIn * 1000),
+        zohoGrantedScopes: tokens.grantedScopes,
+        zohoOrgId: await zohoAnalytics.getOrganizationId(tokens.accessToken)
       }
     );
 
@@ -269,7 +377,8 @@ app.get('/api/analytics/spending-by-category', requireAuth, async (req, res) => 
 
     const data = await zohoAnalytics.getSpendingByCategory(
       client.zohoAccessToken,
-      client.zohoAccountId
+      client.zohoAccountId,
+      client.zohoOrgId
     );
 
     res.json(data);
@@ -299,7 +408,8 @@ app.get('/api/analytics/income-expenses', requireAuth, async (req, res) => {
 
     const data = await zohoAnalytics.getIncomeVsExpenses(
       client.zohoAccessToken,
-      client.zohoAccountId
+      client.zohoAccountId,
+      client.zohoOrgId
     );
 
     res.json(data);
@@ -329,7 +439,8 @@ app.get('/api/analytics/transactions', requireAuth, async (req, res) => {
 
     const data = await zohoAnalytics.getTransactions(
       client.zohoAccessToken,
-      client.zohoAccountId
+      client.zohoAccountId,
+      client.zohoOrgId
     );
 
     res.json(data);
@@ -359,7 +470,8 @@ app.get('/api/analytics/goals', requireAuth, async (req, res) => {
 
     const data = await zohoAnalytics.getGoals(
       client.zohoAccessToken,
-      client.zohoAccountId
+      client.zohoAccountId,
+      client.zohoOrgId
     );
 
     res.json(data);
@@ -389,7 +501,8 @@ app.get('/api/analytics/savings-rate', requireAuth, async (req, res) => {
 
     const data = await zohoAnalytics.getSavingsRate(
       client.zohoAccessToken,
-      client.zohoAccountId
+      client.zohoAccountId,
+      client.zohoOrgId
     );
 
     res.json(data);

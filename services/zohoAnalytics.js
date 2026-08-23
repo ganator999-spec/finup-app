@@ -10,7 +10,7 @@ class ZohoAnalyticsClient {
 
     // Allow using different Zoho regional endpoints (e.g. accounts.zoho.eu)
     this.authDomain = process.env.ZOHO_AUTH_DOMAIN || 'accounts.zoho.com';
-    this.apiBaseUrl = process.env.ZOHO_API_BASE_URL || 'https://analyticsapi.zoho.com/api/v2';
+    this.apiBaseUrl = process.env.ZOHO_API_BASE_URL || 'https://analyticsapi.zoho.com';
 
     this.authUrl = `https://${this.authDomain}/oauth/v2/token`;
     this.authHost = `https://${this.authDomain}`;
@@ -18,24 +18,57 @@ class ZohoAnalyticsClient {
     this.transactionsTableId = tableConfig.TRANSACTIONS_TABLE_ID;
     this.accountsTableId = tableConfig.ACCOUNTS_TABLE_ID;
     this.goalsTableId = tableConfig.GOALS_TABLE_ID;
+    this.transactionsTableName = tableConfig.TRANSACTIONS_TABLE_NAME || 'TRANSACTIONS';
+    this.accountsTableName = tableConfig.ACCOUNTS_TABLE_NAME || 'ACCOUNTS';
+    this.goalsTableName = tableConfig.GOALS_TABLE_NAME || 'GOALS';
+    this.viewNameCache = new Map();
+    this.exportQueue = Promise.resolve();
+  }
+
+  getRequestedScopes() {
+    return process.env.ZOHO_ANALYTICS_SCOPE || 'ZohoAnalytics.data.read,ZohoAnalytics.metadata.read';
+  }
+
+  extractRows(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (!payload || typeof payload !== 'object') return [];
+    if (Array.isArray(payload.rows)) return payload.rows;
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload.data?.rows)) return payload.data.rows;
+    if (Array.isArray(payload.data?.data)) return payload.data.data;
+    if (Array.isArray(payload.response?.result)) return payload.response.result;
+    return [];
+  }
+
+  numericValue(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+  }
+
+  getDateRangeStart() {
+    const lookbackDays = Number(process.env.ZOHO_ANALYTICS_DAYS || 90);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - lookbackDays);
+    return startDate.toISOString().split('T')[0];
   }
 
   // Get authorization URL for user login
   getAuthorizationUrl() {
-    // Use comma-separated scopes because Zoho rejects the URL-encoded space form for this API.
-    // Example: "ZohoAnalytics.workspace.READ,ZohoAnalytics.table.READ"
-    const scopes = 'ZohoAnalytics.workspace.READ,ZohoAnalytics.table.READ';
-
-    // Ensure the final scope string is safe for a URL. Commas are used as separators.
-    const encodedScopes = scopes
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((s) => encodeURIComponent(s))
-      .join(',');
-
-    const authUrl = `${this.authHost}/oauth/v2/auth?client_id=${this.clientId}&response_type=code&scope=${encodedScopes}&redirect_uri=${encodeURIComponent(this.redirectUri)}`;
-    console.log('[Zoho] authUrl', authUrl);
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      response_type: 'code',
+      scope: this.getRequestedScopes(),
+      redirect_uri: this.redirectUri,
+      access_type: 'offline',
+      prompt: 'consent'
+    });
+    const authUrl = `${this.authHost}/oauth/v2/auth?${params.toString()}`;
+    console.log('[Zoho] OAuth authorization requested', {
+      authDomain: this.authDomain,
+      requestedScopes: this.getRequestedScopes(),
+      redirectUri: this.redirectUri,
+      prompt: 'consent'
+    });
     return authUrl;
   }
 
@@ -48,14 +81,23 @@ class ZohoAnalyticsClient {
           client_id: this.clientId,
           client_secret: this.clientSecret,
           redirect_uri: this.redirectUri,
-          grant_type: 'authorization_code'
+          grant_type: 'authorization_code',
+          scope: this.getRequestedScopes()
         }
+      });
+
+      console.log('[Zoho] OAuth token granted', {
+        grantedScopes: response.data.scope || 'scope not returned by Zoho',
+        hasAccessToken: Boolean(response.data.access_token),
+        hasRefreshToken: Boolean(response.data.refresh_token),
+        expiresIn: response.data.expires_in
       });
 
       return {
         accessToken: response.data.access_token,
         refreshToken: response.data.refresh_token,
-        expiresIn: response.data.expires_in
+        expiresIn: response.data.expires_in,
+        grantedScopes: response.data.scope || null
       };
     } catch (error) {
       console.error('Error getting access token:', error.response?.data || error.message);
@@ -77,7 +119,8 @@ class ZohoAnalyticsClient {
 
       return {
         accessToken: response.data.access_token,
-        expiresIn: response.data.expires_in
+        expiresIn: response.data.expires_in,
+        grantedScopes: response.data.scope || null
       };
     } catch (error) {
       console.error('Error refreshing access token:', error.response?.data || error.message);
@@ -85,21 +128,132 @@ class ZohoAnalyticsClient {
     }
   }
 
-  // Query Zoho Analytics table
-  async queryTable(tableId, accessToken, query) {
-    try {
-      const response = await axios.post(
-        `${this.baseUrl}/workspaces/${this.workspaceId}/tables/${tableId}/data`,
-        { sql: query },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+  async getOrganizationId(accessToken) {
+    console.log('[Zoho] Resolving organization ID', {
+      endpoint: `${this.apiBaseUrl}/restapi/v2/orgs`,
+      requiredScope: 'ZohoAnalytics.metadata.read'
+    });
+    const response = await axios.get(`${this.apiBaseUrl}/restapi/v2/orgs`, {
+      headers: { Authorization: `Zoho-oauthtoken ${accessToken}` }
+    });
+    const organizations = response.data?.data?.orgs || [];
+    const organizationId = organizations.find((organization) => organization.isDefault)?.orgId
+      || organizations[0]?.orgId;
+    if (!organizationId) {
+      throw new Error('No Zoho Analytics organization was found');
+    }
+    console.log('[Zoho] Organization ID resolved', { organizationId });
+    return organizationId;
+  }
 
-      return response.data;
+  async getViewName(viewId, accessToken, orgId) {
+    if (this.viewNameCache.has(viewId)) {
+      return this.viewNameCache.get(viewId);
+    }
+
+    const response = await axios.get(
+      `${this.apiBaseUrl}/restapi/v2/workspaces/${this.workspaceId}/views`,
+      {
+        headers: {
+          Authorization: `Zoho-oauthtoken ${accessToken}`,
+          'ZANALYTICS-ORGID': orgId
+        }
+      }
+    );
+    const views = response.data?.data?.views || [];
+    const view = views.find((candidate) => candidate.viewId === viewId);
+    if (!view?.viewName) {
+      throw new Error(`Zoho view ${viewId} was not found in workspace ${this.workspaceId}`);
+    }
+
+    this.viewNameCache.set(viewId, view.viewName);
+    return view.viewName;
+  }
+
+  // Query Zoho Analytics table
+  async queryTable(tableId, accessToken, query, orgId) {
+    return this.enqueueExport(() => this.executeQuery(tableId, accessToken, query, orgId));
+  }
+
+  enqueueExport(task) {
+    const queuedTask = this.exportQueue.then(task, task);
+    this.exportQueue = queuedTask.catch(() => undefined);
+    return queuedTask;
+  }
+
+  async executeQuery(tableId, accessToken, query, orgId) {
+    try {
+      const resolvedOrgId = orgId
+        || process.env.ZOHO_ANALYTICS_ORG_ID
+        || await this.getOrganizationId(accessToken);
+      const resolvedTableName = await this.getViewName(tableId, accessToken, resolvedOrgId);
+      console.log('[Zoho] Query configuration', {
+        tableId,
+        tableName: resolvedTableName,
+        workspaceId: this.workspaceId,
+        organizationId: resolvedOrgId,
+        requiredScope: 'ZohoAnalytics.data.read'
+      });
+
+      const headers = {
+        Authorization: `Zoho-oauthtoken ${accessToken}`,
+        'ZANALYTICS-ORGID': resolvedOrgId
+      };
+      const config = encodeURIComponent(JSON.stringify({
+        sqlQuery: query.replaceAll(`"${this.transactionsTableName}"`, `"${resolvedTableName}"`)
+          .replaceAll(`"${this.accountsTableName}"`, `"${resolvedTableName}"`)
+          .replaceAll(`"${this.goalsTableName}"`, `"${resolvedTableName}"`),
+        responseFormat: 'json'
+      }));
+      const submittedQuery = JSON.parse(decodeURIComponent(config)).sqlQuery;
+      console.log('[Zoho] Export job submitted', { tableName: resolvedTableName, query: submittedQuery });
+      const jobResponse = await axios.get(
+        `${this.apiBaseUrl}/restapi/v2/bulk/workspaces/${this.workspaceId}/data?CONFIG=${config}`,
+        { headers }
+      );
+      const jobId = jobResponse.data?.data?.jobId;
+      if (!jobId) {
+        throw new Error('Zoho did not return an export job ID');
+      }
+
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        const statusResponse = await axios.get(
+          `${this.apiBaseUrl}/restapi/v2/bulk/workspaces/${this.workspaceId}/exportjobs/${jobId}`,
+          { headers }
+        );
+        const job = statusResponse.data?.data;
+        console.log('[Zoho] Export job status', {
+          jobId,
+          attempt: attempt + 1,
+          jobCode: job?.jobCode,
+          jobStatus: job?.jobStatus
+        });
+        if (job?.jobCode === '1004' || job?.jobCode === 1004) {
+          const dataResponse = await axios.get(
+            `${this.apiBaseUrl}/restapi/v2/bulk/workspaces/${this.workspaceId}/exportjobs/${jobId}/data`,
+            { headers }
+          );
+          const result = dataResponse.data;
+          console.log('[Zoho] Export data received', {
+            responseKeys: Object.keys(result || {}),
+            rowCount: this.extractRows(result).length
+          });
+          return result;
+        }
+        if (job?.jobCode === '1003' || job?.jobCode === 1003 || job?.jobCode === '1005' || job?.jobCode === 1005) {
+          const jobError = job.errorMessage
+            || job.error
+            || job.jobInfo?.errorMessage
+            || job.jobInfo?.error
+            || job.jobStatus
+            || job.jobCode;
+          console.error('[Zoho] Export job details:', JSON.stringify(job));
+          throw new Error(`Zoho export job failed: ${jobError}`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      throw new Error('Zoho export job timed out');
     } catch (error) {
       console.error('Error querying Zoho Analytics table:', error.response?.data || error.message);
       throw new Error('Failed to query analytics data');
@@ -107,64 +261,89 @@ class ZohoAnalyticsClient {
   }
 
   // Get transactions for a user (last 90 days)
-  async getTransactions(accessToken, accountId) {
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    const dateStr = ninetyDaysAgo.toISOString().split('T')[0];
+  async getTransactions(accessToken, accountId, orgId) {
+    const dateStr = this.getDateRangeStart();
 
+    const resolvedAccountId = accountId || process.env.ZOHO_DEFAULT_ACCOUNT_ID;
+    const accountFilter = resolvedAccountId ? `WHERE "account_id" = '${resolvedAccountId}' AND "date" >= '${dateStr}'` : `WHERE "date" >= '${dateStr}'`;
     const query = `
-      SELECT id, date, amount, category, description, done, account_id, created_at
-      FROM ${this.transactionsTableId}
-      WHERE account_id = '${accountId}' AND date >= '${dateStr}'
-      ORDER BY date DESC
+      SELECT "id", "date", "amount", "category", "description", "done", "account_id", "created_at"
+      FROM "${this.transactionsTableName}"
+      ${accountFilter}
+      ORDER BY "date" DESC
     `;
 
-    return await this.queryTable(this.transactionsTableId, accessToken, query);
+    const result = await this.queryTable(this.transactionsTableId, accessToken, query, orgId);
+    return {
+      transactions: this.extractRows(result).map((row) => ({
+        id: row.id,
+        date: row.date,
+        amount: this.numericValue(row.amount),
+        category: row.category,
+        description: row.description,
+        done: row.done,
+        accountId: row.account_id,
+        createdAt: row.created_at
+      }))
+    };
   }
 
   // Get spending by category
-  async getSpendingByCategory(accessToken, accountId) {
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    const dateStr = ninetyDaysAgo.toISOString().split('T')[0];
+  async getSpendingByCategory(accessToken, accountId, orgId) {
+    const dateStr = this.getDateRangeStart();
 
+    const resolvedAccountId = accountId || process.env.ZOHO_DEFAULT_ACCOUNT_ID;
+    const accountFilter = resolvedAccountId ? `WHERE "account_id" = '${resolvedAccountId}' AND "date" >= '${dateStr}' AND "done" = 'true'` : `WHERE "date" >= '${dateStr}' AND "done" = 'true'`;
     const query = `
-      SELECT category, SUM(amount) as total_spent
-      FROM ${this.transactionsTableId}
-      WHERE account_id = '${accountId}' AND date >= '${dateStr}' AND done = true
-      GROUP BY category
-      ORDER BY total_spent DESC
+      SELECT "category", SUM("amount") as total_spent
+      FROM "${this.transactionsTableName}"
+      ${accountFilter}
+      GROUP BY "category"
     `;
 
-    return await this.queryTable(this.transactionsTableId, accessToken, query);
+    const result = await this.queryTable(this.transactionsTableId, accessToken, query, orgId);
+    const rows = this.extractRows(result).map((row) => ({
+      category: row.category,
+      amount: Math.abs(this.numericValue(row.total_spent || row.amount))
+    }));
+    const total = rows.reduce((sum, row) => sum + row.amount, 0);
+    return {
+      categories: rows.map((row) => ({
+        ...row,
+        percentage: total ? (row.amount / total) * 100 : 0
+      }))
+    };
   }
 
   // Get income vs expenses
-  async getIncomeVsExpenses(accessToken, accountId) {
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    const dateStr = ninetyDaysAgo.toISOString().split('T')[0];
+  async getIncomeVsExpenses(accessToken, accountId, orgId) {
+    const dateStr = this.getDateRangeStart();
 
+    const resolvedAccountId = accountId || process.env.ZOHO_DEFAULT_ACCOUNT_ID;
+    const accountFilter = resolvedAccountId ? `WHERE "account_id" = '${resolvedAccountId}' AND "date" >= '${dateStr}' AND "done" = 'true'` : `WHERE "date" >= '${dateStr}' AND "done" = 'true'`;
     const query = `
-      SELECT 
-        DATE(date) as transaction_date,
-        SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as income,
-        SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as expenses
-      FROM ${this.transactionsTableId}
-      WHERE account_id = '${accountId}' AND date >= '${dateStr}' AND done = true
-      GROUP BY DATE(date)
-      ORDER BY transaction_date DESC
+      SELECT
+        SUM(if("amount" > 0, "amount", 0)) as income,
+        SUM(if("amount" < 0, ABS("amount"), 0)) as expenses
+      FROM "${this.transactionsTableName}"
+      ${accountFilter}
     `;
 
-    return await this.queryTable(this.transactionsTableId, accessToken, query);
+    const result = await this.queryTable(this.transactionsTableId, accessToken, query, orgId);
+    const row = this.extractRows(result)[0] || {};
+    return {
+      totalIncome: this.numericValue(row.income || row.total_income),
+      totalExpenses: this.numericValue(row.expenses || row.total_expenses),
+      balance: this.numericValue(row.balance)
+    };
   }
 
   // Get account information
   async getAccount(accessToken, accountId) {
     const query = `
-      SELECT id, name, balance, type, created_at, updated_at
-      FROM ${this.accountsTableId}
-      WHERE id = '${accountId}'
+      SELECT "id", "name", "balance", "type", "created_at", "updated_at"
+      FROM "${this.accountsTableName}"
+      WHERE "id" = '${accountId}'
       LIMIT 1
     `;
 
@@ -172,33 +351,48 @@ class ZohoAnalyticsClient {
   }
 
   // Get user's goals
-  async getGoals(accessToken, accountId) {
+  async getGoals(accessToken, accountId, orgId) {
+    const resolvedAccountId = accountId || process.env.ZOHO_DEFAULT_ACCOUNT_ID;
+    const accountFilter = resolvedAccountId ? `WHERE "account_id" = '${resolvedAccountId}'` : '';
     const query = `
-      SELECT id, goal_name, target_amount, current_amount, deadline, account_id, created_at
-      FROM ${this.goalsTableId}
-      WHERE account_id = '${accountId}'
-      ORDER BY deadline ASC
+      SELECT "id", "goal_name", "target_amount", "current_amount", "deadline", "account_id", "created_at"
+      FROM "${this.goalsTableName}"
+      ${accountFilter}
+      ORDER BY "deadline" ASC
     `;
 
-    return await this.queryTable(this.goalsTableId, accessToken, query);
+    const result = await this.queryTable(this.goalsTableId, accessToken, query, orgId);
+    return {
+      goals: this.extractRows(result).map((row) => ({
+        id: row.id,
+        goalName: row.goal_name,
+        targetAmount: this.numericValue(row.target_amount),
+        currentAmount: this.numericValue(row.current_amount),
+        deadline: row.deadline,
+        accountId: row.account_id,
+        createdAt: row.created_at
+      }))
+    };
   }
 
   // Get savings rate calculation
-  async getSavingsRate(accessToken, accountId) {
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    const dateStr = ninetyDaysAgo.toISOString().split('T')[0];
+  async getSavingsRate(accessToken, accountId, orgId) {
+    const dateStr = this.getDateRangeStart();
 
+    const resolvedAccountId = accountId || process.env.ZOHO_DEFAULT_ACCOUNT_ID;
+    const accountFilter = resolvedAccountId ? `WHERE "account_id" = '${resolvedAccountId}' AND "date" >= '${dateStr}' AND "done" = 'true'` : `WHERE "date" >= '${dateStr}' AND "done" = 'true'`;
     const query = `
       SELECT 
-        SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as total_income,
-        SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as total_expenses,
-        ((SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) - SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END)) / SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END)) * 100 as savings_rate
-      FROM ${this.transactionsTableId}
-      WHERE account_id = '${accountId}' AND date >= '${dateStr}' AND done = true
+        SUM(if("amount" > 0, "amount", 0)) as total_income,
+        SUM(if("amount" < 0, ABS("amount"), 0)) as total_expenses,
+        ((SUM(if("amount" > 0, "amount", 0)) - SUM(if("amount" < 0, ABS("amount"), 0))) / SUM(if("amount" > 0, "amount", 0))) * 100 as savings_rate
+      FROM "${this.transactionsTableName}"
+      ${accountFilter}
     `;
 
-    return await this.queryTable(this.transactionsTableId, accessToken, query);
+    const result = await this.queryTable(this.transactionsTableId, accessToken, query, orgId);
+    const row = this.extractRows(result)[0] || {};
+    return { savingsRate: this.numericValue(row.savings_rate) };
   }
 }
 

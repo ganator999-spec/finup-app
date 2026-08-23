@@ -44,6 +44,14 @@ const clientSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters long']
   },
+  passwordResetTokenHash: {
+    type: String,
+    default: null
+  },
+  passwordResetTokenExpiresAt: {
+    type: Date,
+    default: null
+  },
   zohoAccessToken: {
     type: String,
     default: null
@@ -56,7 +64,15 @@ const clientSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  zohoGrantedScopes: {
+    type: String,
+    default: null
+  },
   zohoAccountId: {
+    type: String,
+    default: null
+  },
+  zohoOrgId: {
     type: String,
     default: null
   },

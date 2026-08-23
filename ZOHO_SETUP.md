@@ -30,6 +30,14 @@ ZOHO_CLIENT_SECRET=your_client_secret_here
 ZOHO_WORKSPACE_ID=3062424000000007001
 ZOHO_REDIRECT_URI=http://localhost:3000/auth/zoho/callback
 SESSION_SECRET=your_session_secret_here
+# Optional. Defaults to the scopes required by the dashboard and organization lookup.
+ZOHO_ANALYTICS_SCOPE=ZohoAnalytics.data.read,ZohoAnalytics.metadata.read
+# Optional fallback for existing profiles without a stored organization ID.
+# ZOHO_ANALYTICS_ORG_ID=your_analytics_org_id
+# Optional local fallback for profiles without a mapped Zoho account ID.
+# ZOHO_DEFAULT_ACCOUNT_ID=your_account_id
+# Optional lookback period in days; useful for older local test data.
+# ZOHO_ANALYTICS_DAYS=1000
 ```
 
 > **Tip:** If your Zoho account uses a regional domain (for example EU or India), you may need to set these as well:
@@ -41,9 +49,24 @@ SESSION_SECRET=your_session_secret_here
 > 
 > Replace `zoho.eu` with the domain that matches where you created the OAuth app (check the URL in your Zoho Developer Console: `accounts.zoho.*`).
 
+The Analytics API uses scopes in the form `ZohoAnalytics.<scope>.<operation>`. For
+the read-only dashboard queries in this project, use:
+
+```env
+ZOHO_ANALYTICS_SCOPE=ZohoAnalytics.data.read,ZohoAnalytics.metadata.read
+```
+
+The `metadata.read` scope is required to discover the organization ID used by
+Analytics API requests. Do not use `ZohoAnalytics.workspace.READ` or
+`ZohoAnalytics.table.READ`; those are not valid current Analytics API scopes.
+After changing scopes, start the consent flow again so Zoho issues a refresh
+token with the updated permissions.
+
 ## 📊 Step 2: Create Zoho Analytics Tables
 
-Create these tables in your Zoho Analytics workspace. Get your exact **Table IDs** from Zoho and update the table IDs in [zoho_table_config.json](./zoho_table_config.json)
+Create these tables in your Zoho Analytics workspace. Update both the table IDs
+and the exact table names in [zoho_table_config.json](./zoho_table_config.json).
+The IDs identify the views for API configuration; SQL queries use the names.
 
 ### 2.1 TRANSACTIONS Table
 
@@ -103,7 +126,10 @@ Example:
 {
   "TRANSACTIONS_TABLE_ID": "your_transactions_table_id",
   "ACCOUNTS_TABLE_ID": "your_accounts_table_id",
-  "GOALS_TABLE_ID": "your_goals_table_id"
+  "GOALS_TABLE_ID": "your_goals_table_id",
+  "TRANSACTIONS_TABLE_NAME": "TRANSACTIONS",
+  "ACCOUNTS_TABLE_NAME": "ACCOUNTS",
+  "GOALS_TABLE_NAME": "GOALS"
 }
 ```
 
