@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bill Builder - FinUp</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="billing-page">
+  <div class="billing-shell">
+    <nav class="billing-navbar">
+      <div class="billing-brand">
+        <span class="brand-icon small-brand-icon">✦</span>
+        <span class="brand-text">FinUp</span>
+      </div>
+
+      <div class="billing-nav-links">
+        <a href="/dashboard" class="billing-nav-link">Dashboard</a>
+        <a href="/profile" class="billing-nav-link">Profile</a>
+        <a href="/upload" class="billing-nav-link">Upload</a>
+        <a href="/logout" class="billing-logout">Logout</a>
+      </div>
+    </nav>
+
+    <main class="billing-main">
+      <section class="billing-layout">
+        <section class="billing-panel billing-panel-wide">
+          <div class="billing-panel-header">
+            <div>
+              <span class="section-kicker">Client Bill Studio</span>
+              <h1>Create a client bill</h1>
+            </div>
+            <span class="billing-status">Draft</span>
+          </div>
+
+          <div class="billing-form-grid">
+            <div class="billing-form-group">
+              <label for="clientName">Client name</label>
+              <input type="text" id="clientName" value="Olivia Rivera" />
+            </div>
+            <div class="billing-form-group">
+              <label for="clientCompany">Company / table</label>
+              <input type="text" id="clientCompany" value="The Green Table" />
+            </div>
+            <div class="billing-form-group">
+              <label for="billingDate">Dinner date</label>
+              <input type="date" id="billingDate" value="2026-09-13" />
+            </div>
+            <div class="billing-form-group">
+              <label for="billingNumber">Invoice / check #</label>
+              <input type="text" id="billingNumber" value="FT-9042" />
+            </div>
+          </div>
+
+          <section class="category-builder">
+            <div class="category-builder-title">
+              <div>
+                <span class="section-kicker">Custom menu / bill categories</span>
+                <h2>Order categories</h2>
+              </div>
+              <button type="button" class="add-category-btn" id="addCategory">
+                <span>+</span> Add category
+              </button>
+            </div>
+
+            <div class="category-list" id="categoryList">
+              <article class="category-card">
+                <div class="category-card-top">
+                  <div class="category-title-wrap">
+                    <span class="category-order">01</span>
+                    <input type="text" class="category-name" value="Dinner" />
+                  </div>
+                  <button type="button" class="remove-category" title="Remove">×</button>
+                </div>
+
+                <div class="category-items">
+                  <div class="item-row">
+                    <div class="item-field item-name">
+                      <label>Item</label>
+                      <input type="text" class="item-name-input" value="Signature tasting menu" />
+                    </div>
+                    <div class="item-field item-category">
+                      <label>Category</label>
+                      <select class="item-category-input">
+                        <option selected>Dinner</option>
+                        <option>Wine</option>
+                        <option>Service</option>
+                        <option>Tax</option>
+                      </select>
+                    </div>
+                    <div class="item-field item-qty">
+                      <label>Qty</label>
+                      <input type="number" class="item-qty-input" min="1" value="2" />
+                    </div>
+                    <div class="item-field item-price">
+                      <label>Price</label>
+                      <input type="number" class="item-price-input" value="48" />
+                    </div>
+                    <div class="item-field item-total">
+                      <label>Total</label>
+                      <span class="item-total-output">$96.00</span>
+                    </div>
+                    <button type="button" class="remove-item" title="Remove item">×</button>
+                  </div>
+
+                  <div class="item-row">
+                    <div class="item-field item-name">
+                      <label>Item</label>
+                      <input type="text" class="item-name-input" value="Chef pairing dessert" />
+                    </div>
+                    <div class="item-field item-category">
+                      <label>Category</label>
+                      <select class="item-category-input">
+                        <option selected>Dinner</option>
+                        <option>Wine</option>
+                        <option>Service</option>
+                        <option>Tax</option>
+                      </select>
+                    </div>
+                    <div class="item-field item-qty">
+                      <label>Qty</label>
+                      <input type="number" class="item-qty-input" min="1" value="2" />
+                    </div>
+                    <div class="item-field item-price">
+                      <label>Price</label>
+                      <input type="number" class="item-price-input" value="14" />
+                    </div>
+                    <div class="item-field item-total">
+                      <label>Total</label>
+                      <span class="item-total-output">$28.00</span>
+                    </div>
+                    <button type="button" class="remove-item" title="Remove item">×</button>
+                  </div>
+                </div>
+
+                <div class="category-card-bottom">
+                  <button type="button" class="add-item-btn">
+                    <span>+</span> Add item
+                  </button>
+                  <span class="category-total">Category total: <b>$124.00</b></span>
+                </div>
+              </article>
+
+              <article class="category-card">
+                <div class="category-card-top">
+                  <div class="category-title-wrap">
+                    <span class="category-order">02</span>
+                    <input type="text" class="category-name" value="Wine pairing" />
+                  </div>
+                  <button type="button" class="remove-category" title="Remove">×</button>
+                </div>
+
+                <div class="category-items">
+                  <div class="item-row">
+                    <div class="item-field item-name">
+                      <label>Item</label>
+                      <input type="text" class="item-name-input" value="Estate red pairing" />
+                    </div>
+                    <div class="item-field item-category">
+                      <label>Category</label>
+                      <select class="item-category-input">
+                        <option>Dining</option>
+                        <option selected>Wine</option>
+                        <option>Service</option>
+                        <option>Tax</option>
+                      </select>
+                    </div>
+                    <div class="item-field item-qty">
+                      <label>Qty</label>
+                      <input type="number" class="item-qty-input" min="1" value="3" />
+                    </div>
+                    <div class="item-field item-price">
+                      <label>Price</label>
+                      <input type="number" class="item-price-input" value="16" />
+                    </div>
+                    <div class="item-field item-total">
+                      <label>Total</label>
+                      <span class="item-total-output">$48.00</span>
+                    </div>
+                    <button type="button" class="remove-item" title="Remove item">×</button>
+                  </div>
+                </div>
+
+                <div class="category-card-bottom">
+                  <button type="button" class="add-item-btn">
+                    <span>+</span> Add item
+                  </button>
+                  <span class="category-total">Category total: <b>$48.00</b></span>
+                </div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <aside class="billing-sidebar">
+          <section class="bill-summary-card">
+            <div class="bill-summary-head">
+              <span class="section-kicker">Bill summary</span>
+              <span class="summary-status">Ready</span>
+            </div>
+
+            <div class="bill-summary-total">
+              <span class="summary-label">Total bill</span>
+              <span class="summary-amount">$172.00</span>
+            </div>
+
+            <div class="summary-breakdown">
+              <div class="summary-row">
+                <span>Food</span>
+                <span>$124.00</span>
+              </div>
+              <div class="summary-row">
+                <span>Wine</span>
+                <span>$48.00</span>
+              </div>
+              <div class="summary-row">
+                <span>Tax</span>
+                <span>$0.00</span>
+              </div>
+              <div class="summary-row">
+                <span>Service</span>
+                <span>$0.00</span>
+              </div>
+            </div>
+
+            <div class="summary-tips">
+              <span class="summary-tip-title">Notes</span>
+              <textarea class="note-box" rows="4">Private dinner / preferred wine pairing / guest requested split check.</textarea>
+            </div>
+
+            <div class="summary-actions">
+              <button type="button" class="primary-action">Create bill</button>
+              <button type="button" class="secondary-action">Save draft</button>
+            </div>
+          </section>
+
+          <section class="bill-summary-card">
+            <div class="bill-summary-head">
+              <span class="section-kicker">Client check</span>
+            </div>
+
+            <div class="check-items">
+              <div class="check-item">
+                <span class="check-label">Guest Count</span>
+                <span class="check-value">2</span>
+              </div>
+              <div class="check-item">
+                <span class="check-label">Table</span>
+                <span class="check-value">12</span>
+              </div>
+              <div class="check-item">
+                <span class="check-label">Payment</span>
+                <span class="check-value">Card</span>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const addCategoryButton = document.getElementById('addCategory');
+    const categoryList = document.getElementById('categoryList');
+
+    addCategoryButton.addEventListener('click', () => {
+      const categoryIndex = categoryList.children.length + 1;
+      const category = document.createElement('article');
+      category.className = 'category-card';
+      category.innerHTML = `
+        <div class="category-card-top">
+          <div class="category-title-wrap">
+            <span class="category-order">${String(categoryIndex).padStart(2, '0')}</span>
+            <input type="text" class="category-name" value="New category" />
+          </div>
+          <button type="button" class="remove-category" title="Remove">×</button>
+        </div>
+        <div class="category-items">
+          <div class="item-row">
+            <div class="item-field item-name">
+              <label>Item</label>
+              <input type="text" class="item-name-input" value="New item" />
+            </div>
+            <div class="item-field item-category">
+              <label>Category</label>
+              <select class="item-category-input">
+                <option selected>Dining</option>
+                <option>Wine</option>
+                <option>Service</option>
+                <option>Tax</option>
+              </select>
+            </div>
+            <div class="item-field item-qty">
+              <label>Qty</label>
+              <input type="number" class="item-qty-input" min="1" value="1" />
+            </div>
+            <div class="item-field item-price">
+              <label>Price</label>
+              <input type="number" class="item-price-input" value="0" />
+            </div>
+            <div class="item-field item-total">
+              <label>Total</label>
+              <span class="item-total-output">$0.00</span>
+            </div>
+            <button type="button" class="remove-item" title="Remove item">×</button>
+          </div>
+        </div>
+        <div class="category-card-bottom">
+          <button type="button" class="add-item-btn">
+            <span>+</span> Add item
+          </button>
+          <span class="category-total">Category total: <b>$0.00</b></span>
+        </div>
+      `;
+      categoryList.appendChild(category);
+
+      category.querySelector('.remove-category').addEventListener('click', () => {
+        category.remove();
+      });
+
+      category.querySelector('.add-item-btn').addEventListener('click', () => {
+        const itemRow = document.createElement('div');
+        itemRow.className = 'item-row';
+        itemRow.innerHTML = `
+          <div class="item-field item-name">
+            <label>Item</label>
+            <input type="text" class="item-name-input" value="New item" />
+          </div>
+          <div class="item-field item-category">
+            <label>Category</label>
+            <select class="item-category-input">
+              <option selected>Dining</option>
+              <option>Wine</option>
+              <option>Service</option>
+              <option>Tax</option>
+            </select>
+          </div>
+          <div class="item-field item-qty">
+            <label>Qty</label>
+            <input type="number" class="item-qty-input" min="1" value="1" />
+          </div>
+          <div class="item-field item-price">
+            <label>Price</label>
+            <input type="number" class="item-price-input" value="0" />
+          </div>
+          <div class="item-field item-total">
+            <label>Total</label>
+            <span class="item-total-output">$0.00</span>
+          </div>
+          <button type="button" class="remove-item" title="Remove item">×</button>
+        `;
+        category.querySelector('.category-items').appendChild(itemRow);
+        itemRow.querySelector('.remove-item').addEventListener('click', () => {
+          itemRow.remove();
+        });
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      if (event.target.classList.contains('remove-category')) {
+        event.target.closest('.category-card').remove();
+      }
+
+      if (event.target.classList.contains('remove-item')) {
+        event.target.closest('.item-row').remove();
+      }
+
+      if (event.target.classList.contains('add-item-btn')) {
+        const category = event.target.closest('.category-card');
+        const itemRow = document.createElement('div');
+        itemRow.className = 'item-row';
+        itemRow.innerHTML = `
+          <div class="item-field item-name">
+            <label>Item</label>
+            <input type="text" class="item-name-input" value="New item" />
+          </div>
+          <div class="item-field item-category">
+            <label>Category</label>
+            <select class="item-category-input">
+              <option selected>Dining</option>
+              <option>Wine</option>
+              <option>Service</option>
+              <option>Tax</option>
+            </select>
+          </div>
+          <div class="item-field item-qty">
+            <label>Qty</label>
+            <input type="number" class="item-qty-input" min="1" value="1" />
+          </div>
+          <div class="item-field item-price">
+            <label>Price</label>
+            <input type="number" class="item-price-input" value="0" />
+          </div>
+          <div class="item-field item-total">
+            <label>Total</label>
+            <span class="item-total-output">$0.00</span>
+          </div>
+          <button type="button" class="remove-item" title="Remove item">×</button>
+        `;
+        category.querySelector('.category-items').appendChild(itemRow);
+        itemRow.querySelector('.remove-item').addEventListener('click', () => {
+          itemRow.remove();
+        });
+      }
+    });
+  </script>
+</body>
+</html>

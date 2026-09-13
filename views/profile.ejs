@@ -6,13 +6,15 @@
     <title>Profile - FinUp</title>
     <link rel="stylesheet" href="/style.css">
 </head>
-<body>
+<body class="profile-page">
     <div class="dashboard-wrapper">
         <nav class="navbar">
             <div class="navbar-content">
                 <h2>👤 FinUp Profile</h2>
                 <div class="navbar-actions">
                     <a href="/dashboard" class="nav-link">← Back to Dashboard</a>
+                    <a href="/billing" class="nav-link">🧾 Bill Builder</a>
+                    <a href="/upload" class="nav-link">📎 Upload Preview</a>
                     <a href="/logout" class="logout-btn">🚪 Logout</a>
                 </div>
             </div>
@@ -113,6 +115,68 @@
     </div>
 
     <style>
+        .dashboard-wrapper {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 78% 10%, rgba(190, 238, 210, 0.8), transparent 16%),
+                linear-gradient(135deg, #eefbf3 0%, #dcefe7 100%);
+            color: #10251f;
+        }
+
+        .navbar {
+            background: #10251f;
+            color: #eefbf3;
+            box-shadow: 0 12px 30px rgba(16, 37, 31, 0.12);
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: #eefbf3;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+            font-weight: 700;
+        }
+
+        .nav-link:hover {
+            opacity: 0.82;
+        }
+
+        .logout-btn {
+            background: #eefbf3;
+            color: #10251f;
+            padding: 10px 20px;
+            border-radius: 999px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.7);
+            font-weight: 800;
+        }
+
+        .logout-btn:hover {
+            background: #dff7ea;
+        }
+
         .profile-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -121,24 +185,25 @@
         }
 
         .profile-card {
-            background: white;
-            border-radius: 15px;
+            background: rgba(255,255,255,0.92);
+            border-radius: 22px;
             padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 12px 32px rgba(16,37,31,0.09);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(16,37,31,0.08);
         }
 
         .profile-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 14px 34px rgba(16,37,31,0.12);
         }
 
         .profile-card h3 {
-            color: #667eea;
+            color: #0f7b54;
             margin-bottom: 20px;
             font-size: 18px;
-            font-weight: 600;
-            border-bottom: 2px solid #667eea;
+            font-weight: 800;
+            border-bottom: 2px solid #0f7b54;
             padding-bottom: 10px;
         }
 
@@ -181,32 +246,32 @@
 
         .action-btn {
             padding: 12px 24px;
-            border-radius: 5px;
+            border-radius: 999px;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 800;
             transition: all 0.3s ease;
             display: inline-block;
         }
 
         .primary-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #10251f;
+            color: #eefbf3;
         }
 
         .primary-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 12px 22px rgba(16,37,31,0.2);
         }
 
         .secondary-btn {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
+            background: #eefbf3;
+            color: #10251f;
+            border: 1px solid #10251f;
         }
 
         .secondary-btn:hover {
-            background: #667eea;
-            color: white;
+            background: #dff7ea;
+            color: #10251f;
         }
     </style>
 </body>

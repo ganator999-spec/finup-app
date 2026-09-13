@@ -6,7 +6,7 @@
     <title>Dashboard - FinUp</title>
     <link rel="stylesheet" href="/style.css">
 </head>
-<body>
+<body class="dashboard-page">
     <div class="dashboard-wrapper">
         <nav class="navbar">
             <div class="navbar-content">
@@ -19,6 +19,7 @@
                         <span class="zoho-connected">✅ Zoho Connected</span>
                         <a href="/auth/zoho" class="nav-link reconnect-zoho">Reconnect</a>
                     <% } %>
+                    <a href="/billing" class="nav-link">🧾 Bill Builder</a>
                     <a href="/profile" class="nav-link">👤 Profile</a>
                     <a href="/logout" class="logout-btn">🚪 Logout</a>
                 </div>
@@ -141,6 +142,7 @@
                 </div>
 
                 <div class="dashboard-actions">
+                    <a href="/upload" class="action-btn upload-btn">📎 Upload Preview</a>
                     <a href="/profile" class="action-btn primary-btn">✏️ View Profile</a>
                     <a href="/logout" class="action-btn secondary-btn">🚪 Logout</a>
                 </div>
@@ -151,19 +153,22 @@
     <style>
         .dashboard-wrapper {
             min-height: 100vh;
-            background: #f5f7fa;
+            background:
+                radial-gradient(circle at 78% 12%, rgba(190, 238, 210, 0.8), transparent 16%),
+                linear-gradient(135deg, #eefbf3 0%, #dcefe7 100%);
+            color: #10251f;
         }
 
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: #10251f;
+            color: #eefbf3;
+            box-shadow: 0 12px 30px rgba(16, 37, 31, 0.12);
         }
 
         .navbar-content {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 24px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -171,7 +176,9 @@
 
         .navbar h2 {
             margin: 0;
-            font-size: 24px;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
         }
 
         .navbar-actions {
@@ -183,30 +190,33 @@
         .user-greeting {
             font-size: 14px;
             opacity: 0.9;
+            color: #eefbf3;
         }
 
         .nav-link {
-            color: white;
+            color: #eefbf3;
             text-decoration: none;
             transition: opacity 0.3s ease;
+            font-weight: 700;
         }
 
         .nav-link:hover {
-            opacity: 0.8;
+            opacity: 0.82;
         }
 
         .logout-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+            background: #eefbf3;
+            color: #10251f;
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 999px;
             text-decoration: none;
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255,255,255,0.7);
+            font-weight: 800;
         }
 
         .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: #dff7ea;
         }
 
         .dashboard-container {
@@ -221,16 +231,17 @@
         }
 
         .card {
-            background: white;
-            border-radius: 15px;
+            background: rgba(255,255,255,0.92);
+            border-radius: 22px;
             padding: 25px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 12px 32px rgba(16,37,31,0.09);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(16,37,31,0.08);
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 12px 32px rgba(16,37,31,0.12);
         }
 
         .card-header {
@@ -266,10 +277,10 @@
             margin: 0;
         }
 
-        .account-card .card-amount { color: #667eea; }
-        .income-card .card-amount { color: #4caf50; }
-        .expense-card .card-amount { color: #f44336; }
-        .savings-card .card-amount { color: #ff9800; }
+        .account-card .card-amount { color: #0f7b54; }
+        .income-card .card-amount { color: #3a815b; }
+        .expense-card .card-amount { color: #b85b4e; }
+        .savings-card .card-amount { color: #b3772b; }
 
         .analytics-section {
             margin-bottom: 40px;
@@ -289,17 +300,18 @@
         }
 
         .analytics-card {
-            background: white;
-            border-radius: 15px;
+            background: rgba(255,255,255,0.92);
+            border-radius: 22px;
             padding: 25px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 12px 32px rgba(16,37,31,0.09);
+            border: 1px solid rgba(16,37,31,0.08);
         }
 
         .analytics-card h3 {
-            color: #333;
+            color: #10251f;
             margin: 0 0 20px 0;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 800;
         }
 
         .category-list {
@@ -331,7 +343,7 @@
 
         .category-progress {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: #0f7b54;
             border-radius: 4px;
         }
 
@@ -415,7 +427,7 @@
         .health-score {
             font-size: 24px;
             font-weight: 700;
-            color: #667eea;
+            color: #0f7b54;
         }
 
         .health-bar {
@@ -427,7 +439,7 @@
 
         .health-progress {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: #0f7b54;
             border-radius: 3px;
         }
 
@@ -468,7 +480,7 @@
         .goal-percentage {
             font-size: 14px;
             font-weight: 700;
-            color: #667eea;
+            color: #0f7b54;
         }
 
         .goal-bar {
@@ -480,7 +492,7 @@
 
         .goal-progress {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: #0f7b54;
             border-radius: 4px;
         }
 
@@ -498,32 +510,32 @@
 
         .action-btn {
             padding: 12px 24px;
-            border-radius: 5px;
+            border-radius: 999px;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 800;
             transition: all 0.3s ease;
             display: inline-block;
         }
 
         .primary-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #10251f;
+            color: #eefbf3;
         }
 
         .primary-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 12px 22px rgba(16,37,31,0.2);
         }
 
         .secondary-btn {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
+            background: #eefbf3;
+            color: #10251f;
+            border: 1px solid #10251f;
         }
 
         .secondary-btn:hover {
-            background: #667eea;
-            color: white;
+            background: #dff7ea;
+            color: #10251f;
         }
 
         @media (max-width: 1024px) {

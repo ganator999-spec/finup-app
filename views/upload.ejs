@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Preview - FinUp</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="upload-page">
+  <div class="upload-shell">
+    <nav class="upload-navbar">
+      <div class="upload-brand">
+        <span class="brand-icon small-brand-icon">✦</span>
+        <span class="brand-text">FinUp</span>
+      </div>
+
+      <div class="upload-nav-links">
+        <a href="/dashboard" class="upload-nav-link">Dashboard</a>
+        <a href="/profile" class="upload-nav-link">Profile</a>
+        <a href="/logout" class="upload-logout">Logout</a>
+      </div>
+    </nav>
+
+    <main class="upload-main">
+      <section class="upload-card">
+        <div class="upload-card-header">
+          <div>
+            <span class="section-kicker">In-session Preview</span>
+            <h1>Upload files & images</h1>
+          </div>
+          <span class="upload-status">No files saved</span>
+        </div>
+
+        <div class="upload-drop-zone" id="drop-zone">
+          <input type="file" id="file-input" class="file-input" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.svg,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.ppt,.pptx,.zip,.rar">
+
+          <div class="drop-zone-content">
+            <span class="drop-icon">⇪</span>
+            <span class="drop-title">Drag files here</span>
+            <span class="drop-subtitle">or browse from your device</span>
+            <button type="button" class="upload-browse" id="browse-button">Choose files</button>
+          </div>
+        </div>
+
+        <section class="preview-section">
+          <div class="preview-heading">
+            <span>Selected files</span>
+            <span class="preview-count" id="preview-count">0</span>
+          </div>
+
+          <div class="preview-grid" id="preview-grid"></div>
+
+          <details class="file-details-panel" id="file-details-panel" open>
+            <summary class="file-details-summary">
+              <span class="details-summary-text">File information</span>
+              <span class="details-summary-icon">⌄</span>
+            </summary>
+            <div class="file-details-content">
+              <div class="file-details-list" id="file-details-list">
+                <div class="file-details-empty">No files selected yet.</div>
+              </div>
+            </div>
+          </details>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const browseButton = document.getElementById('browse-button');
+    const previewGrid = document.getElementById('preview-grid');
+    const previewCount = document.getElementById('preview-count');
+    const fileDetailsList = document.getElementById('file-details-list');
+
+    browseButton.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      showFiles(fileInput.files);
+    });
+
+    dropZone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      dropZone.classList.add('drag-active');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-active');
+    });
+
+    dropZone.addEventListener('drop', (event) => {
+      event.preventDefault();
+      dropZone.classList.remove('drag-active');
+      showFiles(event.dataTransfer.files);
+    });
+
+    function showFiles(fileList) {
+      const files = Array.from(fileList || []);
+      previewGrid.innerHTML = '';
+
+      files.forEach((file) => {
+        const item = document.createElement('article');
+        item.className = 'preview-item';
+
+        const type = getFileType(file);
+
+        if (type === 'image') {
+          const reader = new FileReader();
+          reader.onload = () => {
+            item.innerHTML = `
+              <div class="preview-image-wrap">
+                <img src="${reader.result}" alt="" class="preview-image" />
+              </div>
+              <div class="preview-file-meta">
+                <span class="preview-file-name">${escapeHtml(file.name)}</span>
+                <span class="preview-file-size">${formatFileSize(file.size)}</span>
+                <span class="preview-file-type">${getFileLabel(file.name)}</span>
+              </div>
+            `;
+          };
+          reader.readAsDataURL(file);
+        } else {
+          item.innerHTML = `
+            <div class="preview-file-icon">${getFileIcon(file.name)}</div>
+            <div class="preview-file-meta">
+              <span class="preview-file-name">${escapeHtml(file.name)}</span>
+              <span class="preview-file-size">${formatFileSize(file.size)}</span>
+              <span class="preview-file-type">${getFileLabel(file.name)}</span>
+            </div>
+          `;
+        }
+
+        previewGrid.appendChild(item);
+      });
+
+      previewCount.textContent = String(files.length);
+      renderFileDetails(files);
+    }
+
+    function renderFileDetails(files) {
+      if (!files.length) {
+        fileDetailsList.innerHTML = `<div class="file-details-empty">No files selected yet.</div>`;
+        return;
+      }
+
+      fileDetailsList.innerHTML = files.map((file) => `
+        <div class="file-details-row">
+          <div class="file-details-top">
+            <span class="file-details-name">${escapeHtml(file.name)}</span>
+            <span class="file-details-type">${getFileLabel(file.name)}</span>
+          </div>
+          <div class="file-details-meta">
+            <span><b>Size:</b> ${formatFileSize(file.size)}</span>
+            <span><b>Type:</b> ${escapeHtml(file.type || 'Unknown file type')}</span>
+            <span><b>Modified:</b> ${new Date(file.lastModified).toLocaleString()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getFileType(file) {
+      return file.type && file.type.startsWith('image/') ? 'image' : 'file';
+    }
+
+    function getFileIcon(fileName) {
+      const ext = (fileName.split('.').pop() || '').toLowerCase();
+      if (['pdf'].includes(ext)) return 'PDF';
+      if (['doc', 'docx'].includes(ext)) return 'DOC';
+      if (['xls', 'xlsx', 'csv'].includes(ext)) return 'XLS';
+      if (['ppt', 'pptx'].includes(ext)) return 'PPT';
+      if (['zip', 'rar'].includes(ext)) return 'ZIP';
+      if (['txt'].includes(ext)) return 'TXT';
+      return 'FILE';
+    }
+
+    function getFileLabel(fileName) {
+      const ext = (fileName.split('.').pop() || '').toLowerCase();
+      if (ext === 'pdf') return 'PDF Document';
+      if (ext === 'doc' || ext === 'docx') return 'Word Document';
+      if (ext === 'xls' || ext === 'xlsx') return 'Excel Workbook';
+      if (ext === 'csv') return 'CSV Sheet';
+      if (ext === 'ppt' || ext === 'pptx') return 'Presentation';
+      if (ext === 'zip' || ext === 'rar') return 'Archive';
+      if (ext === 'txt') return 'Text File';
+      return 'File';
+    }
+
+    function formatFileSize(size) {
+      if (size <= 0) return '0 KB';
+      const units = ['B', 'KB', 'MB', 'GB'];
+      const power = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1);
+      const value = size / Math.pow(1024, power);
+      return `${value.toFixed(value >= 10 || power === 0 ? 0 : 1)} ${units[power]}`;
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

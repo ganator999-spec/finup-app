@@ -6,9 +6,9 @@
     <title>Create Account - FinUp</title>
     <link rel="stylesheet" href="/style.css">
 </head>
-<body>
-    <div style="min-height: 100vh; background: linear-gradient(135deg, #ffffff 0%, #f5f5f7 100%); padding: 40px 20px;">
-        <div class="form-container" style="max-width: 520px;">
+<body class="onboarding-page">
+    <div class="onboarding-shell">
+        <div class="form-container onboarding-form-container">
             <h1>👋 Create Account</h1>
             <p class="subtitle">Join FinUp and take control of your finances. Fill out your information to get started.</p>
 
@@ -118,15 +118,18 @@
     </div>
 
     <script>
-        document.querySelector('.onboarding-form').addEventListener('submit', function(e) {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (password !== confirmPassword) {
-                e.preventDefault();
-                alert('Passwords do not match. Please try again.');
-            }
-        });
+        const onboardingForm = document.querySelector('.onboarding-form');
+        if (onboardingForm) {
+            onboardingForm.addEventListener('submit', function(e) {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (password !== confirmPassword) {
+                    e.preventDefault();
+                    alert('Passwords do not match. Please try again.');
+                }
+            });
+        }
     </script>
 </body>
 </html>

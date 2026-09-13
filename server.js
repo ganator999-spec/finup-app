@@ -51,7 +51,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Routes
 app.get('/', (req, res) => {
-  res.render('login', { error: null, email: '' });
+  res.render('landing');
 });
 
 // Onboarding route
@@ -300,6 +300,48 @@ app.get('/profile', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Profile error:', error);
     res.status(500).render('login', { 
+      error: 'An error occurred. Please try again.',
+      email: ''
+    });
+  }
+});
+
+// UPLOAD PREVIEW ROUTE
+app.get('/upload', requireAuth, async (req, res) => {
+  try {
+    const Client = require('./models/Client');
+    const client = await Client.findById(req.session.userId);
+
+    if (!client) {
+      req.session.destroy();
+      return res.redirect('/login');
+    }
+
+    res.render('upload');
+  } catch (error) {
+    console.error('Upload page error:', error);
+    res.status(500).render('login', {
+      error: 'An error occurred. Please try again.',
+      email: ''
+    });
+  }
+});
+
+// BILLING / CLIENT CHECK ROUTE
+app.get('/billing', requireAuth, async (req, res) => {
+  try {
+    const Client = require('./models/Client');
+    const client = await Client.findById(req.session.userId);
+
+    if (!client) {
+      req.session.destroy();
+      return res.redirect('/login');
+    }
+
+    res.render('billing');
+  } catch (error) {
+    console.error('Billing page error:', error);
+    res.status(500).render('login', {
       error: 'An error occurred. Please try again.',
       email: ''
     });
